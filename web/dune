@@ -1,0 +1,17 @@
+(executable
+  (name js)
+  (modes js)
+
+  (libraries asli.libASL asli.libASL-web js_of_ocaml)
+  (js_of_ocaml (flags --sourcemap :standard \ --source-map-inline))
+  (preprocess (pps js_of_ocaml-ppx))
+  )
+
+(rule
+ (target aslp.heap)
+ (deps js.bc.js cache.js)
+ (action (run node ./cache.js)))
+
+(install
+ (files js.bc.js index.html reset.css aslp.js cache.js aslp.heap)
+ (section lib))

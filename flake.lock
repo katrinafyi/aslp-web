@@ -1,0 +1,75 @@
+{
+  "nodes": {
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1708556654,
+        "narHash": "sha256-Ozz7xanIz+qxyy7CtlDapQ/uc24ngxNFYIZfMzQWrmk=",
+        "owner": "katrinafyi",
+        "repo": "nixpkgs",
+        "rev": "4648e4b766a25d1324803c1bfaf60f6b388e460c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "katrinafyi",
+        "ref": "pac-nix",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs-patch-1": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-Y4ya/hJsQ1B4iHYwJxRDW2ZtP/ErGn6zekvT5Q6rw+o=",
+        "type": "file",
+        "url": "https://github.com/NixOS/nixpkgs/compare/ffacc011dffba16ca360028d1f81cae99ff1280f..9a9cf8661391f21f7a44dc4823f815524351c94f.patch"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://github.com/NixOS/nixpkgs/compare/ffacc011dffba16ca360028d1f81cae99ff1280f..9a9cf8661391f21f7a44dc4823f815524351c94f.patch"
+      }
+    },
+    "nixpkgs-upstream": {
+      "locked": {
+        "lastModified": 1707689078,
+        "narHash": "sha256-UUGmRa84ZJHpGZ1WZEBEUOzaPOWG8LZ0yPg1pdDF/yM=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "f9d39fb9aff0efee4a3d5f4a6d7c17701d38a1d8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "pac-nix": {
+      "inputs": {
+        "nixpkgs": "nixpkgs",
+        "nixpkgs-patch-1": "nixpkgs-patch-1",
+        "nixpkgs-upstream": "nixpkgs-upstream"
+      },
+      "locked": {
+        "lastModified": 1718960990,
+        "narHash": "sha256-flVpccIg1q1LcamNqd5lpwLUGu77wlJxfS/IrATQU5o=",
+        "owner": "katrinafyi",
+        "repo": "pac-nix",
+        "rev": "bb07e0e3e44df59663fb09b42859a9a3b97e9e5c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "katrinafyi",
+        "repo": "pac-nix",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "pac-nix": "pac-nix"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
