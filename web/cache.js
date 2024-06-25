@@ -19,9 +19,9 @@ const marshal = () => {
   } else {
     marshalUrl = URL.createObjectURL(
       new File(
-        [arr], 
+        [arr],
         'aslp.heap',
-        {lastModified: Date.now(), type: 'application/octet-stream'}));
+        { lastModified: Date.now(), type: 'application/octet-stream' }));
 
   }
   console.log(marshalUrl);

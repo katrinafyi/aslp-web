@@ -55,10 +55,6 @@
                pattern="[a-fA-F0-9x ]+" />
       </p>
 
-      <p>
-        <button id="go" submit>Semantics</button>
-        <span id="loading" class="invisible">Loading...</span>
-      </p>
 
         <details>
           <summary>Debug options</summary>
@@ -72,6 +68,10 @@
           </p>
         </details>
 
+      <p>
+        <button id="go" submit>Semantics</button>
+        <span id="loading" class="invisible">Loading...</span>
+      </p>
       <hr/>
 
       <h4>Output</h4>
@@ -83,8 +83,16 @@
       </p>
 
       <p>
-        <pre id="output"></pre>
+        <pre id="output" style="min-height: 10em"></pre>
       </p>
+
+      <hr/>
+
+      <small>
+        <pre>@aslp_web@ (@aslp_web_commit@)
+@aslp@ (@aslp_commit@)</pre>
+      </small>
+
 
     </form>
 

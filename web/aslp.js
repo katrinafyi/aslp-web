@@ -110,11 +110,8 @@ const submit = () => {
 
       copyarea.value = url.toString();
 
-
       libASL_web.setDebugLevel(parseInt(debug.value));
       libASL_web.dis(previousOpcode);
-    } catch (e) {
-      write(true)(e.toString());
     } finally {
       loading.classList.add('invisible');
       dl.disabled = false;
