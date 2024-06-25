@@ -41,7 +41,7 @@
 
   <body>
     <h1>ASLp Web</h1>
-    <form action="javascript:submit();">
+    <form id="form" action="javascript:submit();">
       <div>
         <p>
           <input onclick="setOpcodeMode('opcode');" type="radio" id="opcode" name="mode" value="opcode" checked />
@@ -76,9 +76,9 @@
 
       <h4>Output</h4>
       <p>
-        <button disabled type=button class="small" id="dl">Download</button>
+        <button onclick="downloadOutput();" disabled type=button class="small" id="dl">Download</button>
         <button disabled type=button class="small" id="share">Share</button>
-        <button onclick="clearOutput();" type=button class="small" id="clear">Clear</button>
+        <button onclick="clearOutput();" disabled type=button class="small" id="clear">Clear</button>
       </p>
       <p>
         <pre id="output"></pre>

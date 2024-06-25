@@ -11,9 +11,13 @@ const get = query => {
 // XXX: cannot use worker due to worker stack size being too small
 // const worker = new Worker('worker.js');
 
+const form = get('#form');
 const input = get('#op');
 const output = get('#output');
 const loading = get('#loading');
+const download = get('#dl');
+const clear = get('#clear');
+const share = get('#share');
 
 
 const OPCODE = 'opcode';
@@ -30,7 +34,7 @@ const flipEndian = s => {
 const getOpcode = () => {
   const val = input.value.trim().replace(/^0x/, '').replace(/\s/g, '').padStart(8, '0');
 
-  if (val.length > 8) throw Error('opcode too long: ' + val.length);
+  if (val.length > 8) throw Error('opcode too long. expected at most 8 hex chars but got ' + val.length);
   if (mode == OPCODE) return val;
   return flipEndian(val);
 }
@@ -52,8 +56,32 @@ const onChangeDebug = el => {
   libASL_web.setDebugLevel(parseInt(el.value, 10));
 };
 
+const outputData = [];
+let previousOpcode = null;
+
 const clearOutput = () => {
+  outputData.length = 0;
+  previousOpcode = null;
   output.innerHTML = '';
+  dl.disabled = true;
+  clear.disabled = true;
+  share.disabled = true;
+};
+
+const downloadOutput = () => {
+  const file = new Blob(outputData);
+
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(file);
+  a.setAttribute('download', `aslp_output_${previousOpcode}.txt`);
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+};
+
+const shareLink = () => {
+  const data = new FormData(form);
 };
 
 const submit = () => {
@@ -62,13 +90,18 @@ const submit = () => {
   // defer computation so loading indicator shows.
   setTimeout(() => {
     try {
-      libASL_web.dis('0x' + getOpcode());
+      previousOpcode = '0x' + getOpcode();
+      libASL_web.dis(previousOpcode);
+    } catch (e) {
+      write(true)(e.toString());
     } finally {
       loading.classList.add('invisible');
+      dl.disabled = false;
+      clear.disabled = false;
+      share.disabled = false;
     }
   }, 30);
 };
-
 
 const write = (isError) => s => {
   const span = document.createElement('span');
@@ -76,6 +109,7 @@ const write = (isError) => s => {
   for (let i = 0; i < s.length; i++) {
     data[i] = s.charCodeAt(i);
   }
+  outputData.push(data);
   span.textContent = new TextDecoder('utf-8').decode(data);
   if (isError)
     span.classList.add('stderr');
