@@ -138,25 +138,20 @@ const write = (isError) => s => {
 const init = async () => {
   libASL_web.init(write(false), write(true));
 
-  try {
-    const resp = await fetch('aslp.heap');
-    if (!resp.ok) throw new Error('fetch failure');
-    const buf = await resp.arrayBuffer();
-    const arr = new Uint8Array(buf);
-    libASL_web.unmarshal(arr);
-    console.log(`heap loaded: ${arr.length} bytes`);
-  } catch (e) {
-    console.warn('failed to fetch heap');
-    console.warn(e);
-  }
+  const cached = unmarshal();
 
   try {
     const urlData = new URLSearchParams(window.location.search);
     if (urlData.get('op') != null) op.value = urlData.get('op');
     if (urlData.get('mode') != null) get(`input[name="mode"][value="${urlData.get('mode')}"]`).checked = true;
     if (urlData.get('debug') != null) debug.value = urlData.get('debug');
-    if (urlData.size > 0) submit();
+    if (urlData.size > 0) {
+      await cached;
+      submit();
+    }
   } finally { }
+
+  await cached;
 };
 
 init();

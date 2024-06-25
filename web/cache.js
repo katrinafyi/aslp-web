@@ -27,6 +27,33 @@ const marshal = () => {
   console.log(marshalUrl);
 };
 
+const unmarshal = async () => {
+  try {
+    const HEAP = 'aslp.heap';
+    const cache = await caches.open('aslp-web-' + window.location.pathname);
+
+    if (await cache.match(HEAP) == null) {
+      console.log('not cached');
+      await cache.add(HEAP);
+    } else {
+      console.log('cached');
+    }
+
+    const resp = await cache.match(HEAP);
+    if (!resp.ok) throw new Error('fetch failure');
+
+    const buf = await resp.arrayBuffer();
+    const arr = new Uint8Array(buf);
+
+    libASL_web.unmarshal(arr);
+    console.log(`heap loaded: ${arr.length} bytes`);
+
+  } catch (e) {
+    console.warn('failed to fetch heap');
+    console.warn(e);
+  }
+};
+
 if (IS_NODE) {
   marshal();
 }
