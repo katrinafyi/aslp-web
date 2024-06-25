@@ -112,6 +112,12 @@ const submit = () => {
 
       libASL_web.setDebugLevel(parseInt(debug.value));
       libASL_web.dis(previousOpcode);
+    } catch (e) {
+      if (e instanceof Error) {
+        write(true)(e.toString());
+      } else {
+        throw e;
+      }
     } finally {
       loading.classList.add('invisible');
       dl.disabled = false;
