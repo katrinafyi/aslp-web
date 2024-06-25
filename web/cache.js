@@ -5,10 +5,11 @@ if (IS_NODE) {
   global.fs = require('fs');
   global.path = require('path');
   global.libASL_web = require('./js.bc.js').libASL_web;
+  global.pako = require('./pako.min.js');
 }
 
 const marshal = () => {
-  const arr = libASL_web.marshal();
+  const arr = pako.gzip(libASL_web.marshal());
   console.log('marshalling aslp environment...');
 
   let marshalUrl;
@@ -43,10 +44,10 @@ const unmarshal = async () => {
     if (!resp.ok) throw new Error('fetch failure');
 
     const buf = await resp.arrayBuffer();
-    const arr = new Uint8Array(buf);
+    const arr = pako.ungzip(new Uint8Array(buf));
 
     libASL_web.unmarshal(arr);
-    console.log(`heap loaded: ${arr.length} bytes`);
+    console.log(`heap loaded: ${arr.length} bytes, ${buf.byteLength} compressed`);
 
   } catch (e) {
     console.warn('failed to fetch heap');
