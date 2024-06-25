@@ -51,7 +51,7 @@
         </p>
       </div>
       <p>
-        <input id="op" type="text" class="monospace" required autofocus value="0x8b031041"
+        <input id="op" type="text" class="monospace" required autofocus name="op" value="0x8b031041"
                pattern="[a-fA-F0-9x ]+" />
       </p>
 
@@ -77,13 +77,15 @@
       <h4>Output</h4>
       <p>
         <button onclick="downloadOutput();" disabled type=button class="small" id="dl">Download</button>
-        <button disabled type=button class="small" id="share">Share</button>
         <button onclick="clearOutput();" disabled type=button class="small" id="clear">Clear</button>
+        <button onclick="shareLink();" disabled type=button class="small" id="share">Share</button>
+        <input class="small" id="copy" type="text" readonly>
       </p>
+
       <p>
         <pre id="output"></pre>
-      
       </p>
+
     </form>
 
 

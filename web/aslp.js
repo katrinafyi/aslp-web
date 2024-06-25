@@ -13,11 +13,13 @@ const get = query => {
 
 const form = get('#form');
 const input = get('#op');
+const debug = get('#debug');
 const output = get('#output');
 const loading = get('#loading');
 const download = get('#dl');
 const clear = get('#clear');
 const share = get('#share');
+const copyarea = get('#copy');
 
 
 const OPCODE = 'opcode';
@@ -58,14 +60,17 @@ const onChangeDebug = el => {
 
 const outputData = [];
 let previousOpcode = null;
+let formData = null;
 
 const clearOutput = () => {
   outputData.length = 0;
   previousOpcode = null;
+  formData = null;
   output.innerHTML = '';
   dl.disabled = true;
   clear.disabled = true;
   share.disabled = true;
+  copyarea.value = '';
 };
 
 const downloadOutput = () => {
@@ -81,7 +86,13 @@ const downloadOutput = () => {
 };
 
 const shareLink = () => {
-  const data = new FormData(form);
+  if (copyarea.value.trim() != '') {
+    history.pushState({}, null, copyarea.value);
+
+    copyarea.focus();
+    copyarea.select();
+    document.execCommand('copy');
+  }
 };
 
 const submit = () => {
@@ -91,6 +102,16 @@ const submit = () => {
   setTimeout(() => {
     try {
       previousOpcode = '0x' + getOpcode();
+      formData = new FormData(form);
+
+      const params = new URLSearchParams(formData).toString();
+      const url = new URL(window.location.href);
+      url.search = '?' + params;
+
+      copyarea.value = url.toString();
+
+
+      libASL_web.setDebugLevel(parseInt(debug.value));
       libASL_web.dis(previousOpcode);
     } catch (e) {
       write(true)(e.toString());
@@ -119,7 +140,6 @@ const write = (isError) => s => {
 
 const init = async () => {
   libASL_web.init(write(false), write(true));
-  libASL_web.setDebugLevel(0);
 
   try {
     const resp = await fetch('aslp.heap');
@@ -132,6 +152,14 @@ const init = async () => {
     console.warn('failed to fetch heap');
     console.warn(e);
   }
+
+  try {
+    const urlData = new URLSearchParams(window.location.search);
+    if (urlData.get('op') != null) op.value = urlData.get('op');
+    if (urlData.get('mode') != null) get(`input[name="mode"][value="${urlData.get('mode')}"]`).checked = true;
+    if (urlData.get('debug') != null) debug.value = urlData.get('debug');
+    if (urlData.size > 0) submit();
+  } finally { }
 };
 
 init();
