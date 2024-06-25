@@ -9,8 +9,14 @@
   (modules js)
 
   (libraries lib)
-  (js_of_ocaml (flags --sourcemap :standard \ --source-map-inline))
+  (js_of_ocaml (flags --source-map-inline))
   (preprocess (pps js_of_ocaml-ppx)))
+
+(rule
+ (targets jstemp.bc.js jstemp.bc.map)
+ (deps js.bc.js)
+ (action (run ../sourcemap.py js.bc.js jstemp.bc.js js.bc.map)))
+
 
 (executable
   (name builder)
@@ -18,13 +24,14 @@
   (modules builder)
 
   (libraries lib)
-  (js_of_ocaml (flags --sourcemap :standard \ --source-map-inline))
   (preprocess (pps js_of_ocaml-ppx)))
+
 
 (rule
  (target aslp.heap)
  (deps builder.bc.js pako.min.js cache.js)
  (action (run node ./cache.js)))
+
 
 ; javascript executable to build aslp.heap
 (install
@@ -33,5 +40,5 @@
 
 ; static files for distribution
 (install
- (files js.bc.js index.html reset.css aslp.js cache.js aslp.heap pako.min.js)
+ (files (jstemp.bc.js as js.bc.js) (jstemp.bc.map as js.bc.map) index.html reset.css aslp.js cache.js aslp.heap pako.min.js)
  (section lib))
