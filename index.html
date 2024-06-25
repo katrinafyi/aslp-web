@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+  <head>
+    <title>ASLp Web</title>
+    <link href="reset.css" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2em;
+    }
+
+    .monospace {
+      font-family: monospace;
+    }
+
+    .small {
+      font-size: 12px;
+    }
+
+    p {
+      margin-bottom: 0.5em;
+    }
+
+    input[type="radio"], label, summary {
+      cursor: pointer;
+    }
+
+    .invisible {
+      visibility: hidden;
+    }
+
+    .stderr {
+      color: #ce0000;
+    }
+  </style>
+
+  <body>
+    <h1>ASLp Web</h1>
+
+    <p>
+      On this website, you can use the <a href="https://github.com/UQ-PAC/aslp">ASLp</a> partial evaluator within your browser
+      to retrieve semantics for ARM instructions.
+    </p>
+
+    <p><b>Latest:</b> <!--LATEST--></p>
+
+    <p><details>
+      <summary>All versions</summary>
+      <p>
+        <ul>
+          <!--VERSIONS-->
+        </ul>
+      </p>
+    </details></p>
+
+    <p>The code for this web interface can be found <a href="https://github.com/katrinafyi/aslp-web">on GitHub</a>.</p>
+    
+  </body>
+</html>
