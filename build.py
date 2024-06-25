@@ -29,7 +29,7 @@ def main():
     print('building', v, flake)
     result = 'result_' + v
 
-    subprocess.check_call(['nix', 'build', '-Lv', '--out-link', result, flake])
+    subprocess.check_call(['nix', 'build', '-L', '--out-link', result, flake])
 
     shutil.copytree(result + '/' + path + '/.', OUT_PATH + '/' + v, copy_function=shutil.copy)
 
