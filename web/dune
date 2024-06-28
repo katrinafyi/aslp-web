@@ -14,8 +14,8 @@
 
 (rule
  (targets jstemp.bc.js jstemp.bc.map)
- (deps js.bc.js)
- (action (run ../sourcemap.py js.bc.js jstemp.bc.js js.bc.map)))
+ (deps js.bc.js ../sourcemap.py)
+ (action (run python3 ../sourcemap.py js.bc.js jstemp.bc.js js.bc.map)))
 
 
 (executable
