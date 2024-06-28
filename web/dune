@@ -1,7 +1,7 @@
 (library
   (name lib)
   (modules lib)
-  (libraries (re_export asli.libASL) asli.libASL-web (re_export js_of_ocaml)))
+  (libraries (re_export asli.libASL-merged) asli.libASL-web (re_export js_of_ocaml)))
 
 (executable
   (name js)

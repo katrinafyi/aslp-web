@@ -16,6 +16,7 @@ let denv () = LibASL.Dis.build_env @@ fst (env ())
 
 let print_pp = ref true
 let pp_stmt () =
+  let open LibASL in
   if !print_pp then Asl_utils.pp_stmt else fun x -> Utils.to_string (Asl_parser_pp.pp_raw_stmt x)
 
 let dis (x: string) =
