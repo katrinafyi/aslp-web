@@ -8,8 +8,26 @@ const get = query => {
   return result;
 };
 
-// XXX: cannot use worker due to worker stack size being too small
-// const worker = new Worker('worker.js');
+const worker = new Worker('worker.js');
+// worker.postMessage('a');
+worker.onmessage = e => {
+  // console.log(e.data);
+  const [stream, message] = e.data;
+  // if (stream === 'exn') throw message;
+  if (stream === 'rdy') {
+    console.log('ready:', e.data);
+    loading.classList.add('invisible');
+  } else if (stream === 'fin') {
+    console.log('finish:', e.data);
+    dl.disabled = false;
+    clear.disabled = false;
+    share.disabled = false;
+  } else if (stream === 'err' || stream === 'out') {
+    write(stream === 'err')(message);
+  } else {
+    console.error('unknown:', e.data);
+  }
+};
 
 const form = get('#form');
 const input = get('#op');
@@ -54,10 +72,6 @@ const setOpcodeMode = newMode => {
   }
 };
 
-const onChangeDebug = el => {
-  libASL_web.setDebugLevel(parseInt(el.value, 10));
-};
-
 const outputData = [];
 let previousOpcode = null;
 let formData = null;
@@ -97,34 +111,27 @@ const shareLink = () => {
 
 const submit = () => {
   clearOutput();
-  loading.classList.remove('invisible');
-  // defer computation so loading indicator shows.
-  setTimeout(() => {
-    try {
-      previousOpcode = '0x' + getOpcode();
-      formData = new FormData(form);
 
-      const params = new URLSearchParams(formData).toString();
-      const url = new URL(window.location.href);
-      url.search = '?' + params;
+  try {
+    previousOpcode = '0x' + getOpcode();
+    formData = new FormData(form);
 
-      copyarea.value = url.toString();
+    const params = new URLSearchParams(formData).toString();
+    const url = new URL(window.location.href);
+    url.search = '?' + params;
 
-      libASL_web.setDebugLevel(parseInt(debug.value));
-      libASL_web.dis(previousOpcode);
-    } catch (e) {
-      if (e instanceof Error) {
-        write(true)(e.toString());
-      } else {
-        throw e;
-      }
-    } finally {
-      loading.classList.add('invisible');
-      dl.disabled = false;
-      clear.disabled = false;
-      share.disabled = false;
+    copyarea.value = url.toString();
+
+    const arg = {opcode: previousOpcode, debug: parseInt(debug.value)};
+    worker.postMessage(['dis', arg]);
+
+  } catch (e) {
+    if (e instanceof Error) {
+      write(true)(e.toString());
+    } else {
+      throw e;
     }
-  }, 30);
+  } finally { }
 };
 
 const write = (isError) => s => {
@@ -141,10 +148,27 @@ const write = (isError) => s => {
   return 0;
 };
 
-const init = async () => {
-  libASL_web.init(write(false), write(true));
 
-  const cached = unmarshal();
+const HEAP = 'aslp.heap';
+const fetchHeap = async () => {
+  if (!window.caches) {
+    console.warn('fallback to non-cached fetch');
+    return fetch(HEAP);
+  }
+
+  const cache = await caches.open('aslp-web-' + window.location.pathname);
+
+  if (await cache.match(HEAP) == null) {
+    console.log('not cached');
+    await cache.add(HEAP);
+  } else {
+    console.log('cached');
+  }
+
+  return cache.match(HEAP);
+}
+
+const init = async () => {
 
   try {
     const urlData = new URLSearchParams(window.location.search);
@@ -152,12 +176,14 @@ const init = async () => {
     if (urlData.get('mode') != null) get(`input[name="mode"][value="${urlData.get('mode')}"]`).checked = true;
     if (urlData.get('debug') != null) debug.value = urlData.get('debug');
     if (urlData.size > 0) {
-      await cached;
       submit();
     }
   } finally { }
 
-  await cached;
+  const resp = await fetchHeap();
+  if (!resp.ok) throw new Error('fetch failure');
+  const buf = await resp.arrayBuffer();
+  worker.postMessage(['unmarshal', buf]);
 };
 
 init();

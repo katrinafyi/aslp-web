@@ -36,6 +36,7 @@ let () =
     (object%js
       (* TODO: support stdin from javascript for repl, possibly converting asli repl to lwt *)
       method init (out : string -> unit) (err : string -> unit) = init (fun () -> "") out err
+      method printException (exn : exn) = Printexc.to_string exn;
 
       method marshal = Lib.marshal (env ())
       method unmarshal (x : Lib.js_uint8Array) = (cachedenv := Some (Lib.unmarshal x))

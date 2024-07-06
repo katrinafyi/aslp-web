@@ -1,5 +1,5 @@
 
-const IS_NODE = typeof window === 'undefined';
+const IS_NODE = typeof self !== 'object';
 
 if (IS_NODE) {
   global.fs = require('fs');
@@ -31,32 +31,9 @@ const marshal = () => {
   console.log(marshalUrl);
 };
 
-const HEAP = 'aslp.heap';
 
-const fetchHeap = async () => {
-  if (!window.caches) {
-    console.warn('fallback to non-cached fetch');
-    return fetch(HEAP);
-  }
-
-  const cache = await caches.open('aslp-web-' + window.location.pathname);
-
-  if (await cache.match(HEAP) == null) {
-    console.log('not cached');
-    await cache.add(HEAP);
-  } else {
-    console.log('cached');
-  }
-
-  return cache.match(HEAP);
-}
-
-const unmarshal = async () => {
+const unmarshal = async (/* ArrayBuffer */ buf) => {
   try {
-    const resp = await fetchHeap();
-
-    if (!resp.ok) throw new Error('fetch failure');
-    const buf = await resp.arrayBuffer();
     const arr = pako.ungzip(new Uint8Array(buf));
 
     libASL_web.unmarshal(arr);

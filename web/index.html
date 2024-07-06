@@ -3,8 +3,8 @@
   <head>
     <title>ASLp Web</title>
     <script defer type="text/javascript" src="js.bc.js"></script>
-    <script defer type="text/javascript" src="pako.min.js"></script>
-    <script defer type="text/javascript" src="cache.js"></script>
+    <!-- <script defer type="text/javascript" src="pako.min.js"></script> -->
+    <!-- <script defer type="text/javascript" src="cache.js"></script> -->
     <link href="reset.css" rel="stylesheet" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
@@ -60,7 +60,7 @@
         <details>
           <summary>Debug options</summary>
           <p>
-            <select onchange="onChangeDebug(this);" name="debug" id="debug">
+            <select name="debug" id="debug">
               <option value="0">minimal</option>
               <option value="1">stack trace</option>
               <option value="2">stack trace, variables</option>
@@ -71,7 +71,7 @@
 
       <p>
         <button id="go" submit>Semantics</button>
-        <span id="loading" class="invisible">Loading...</span>
+        <span id="loading" class="">Loading...</span>
       </p>
       <hr/>
 
