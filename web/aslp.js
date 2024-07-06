@@ -23,7 +23,7 @@ worker.onmessage = e => {
     clear.disabled = false;
     share.disabled = false;
   } else if (stream === 'err' || stream === 'out') {
-    write(stream === 'err')(message);
+    requestAnimationFrame(() => write(stream === 'err')(message));
   } else {
     console.error('unknown:', e.data);
   }
