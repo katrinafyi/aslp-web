@@ -49,6 +49,7 @@
   (jstemp.bc.js as js.bc.js)
   (jstemp.bc.map as js.bc.map)
   index.html
+  keystone-aarch64.min.js
   reset.css
   aslp.js
   worker.js
