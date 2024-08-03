@@ -2,7 +2,8 @@
  * Supporting code to enable ASLp-in-JS. Handles input/output.
  */
 
-import ks from "./keystone-aarch64.min.js"
+import ks from "./keystone-aarch64.min.js";
+import { throttle } from "./throttle-debounce.js";
 
 const get = query => {
   const result = document.querySelector(query);
@@ -13,7 +14,8 @@ const get = query => {
 const parseIntSafe = (s, radix) => {
   const x = parseInt(s, radix);
   if (isNaN(x)) throw new Error('parseInt returned NaN');
-  // if (x.toString(radix) !== s) throw new Error('parseInt partially failed');
+  if (radix === 16 && !s.match(/^[0-9a-fA-F]+$/)) throw new Error('invalid hexadecimal number');
+  if (radix === 10 && !s.match(/^[0-9]+$/)) throw new Error('invalid decimal number');
   return x;
 };
 
@@ -46,6 +48,9 @@ const form = get('#form');
 const opcodeInput = get('#opcode');
 const bytesInput = get('#bytes');
 const asmInput = get('#asm');
+const inputError = get('#inputerror');
+
+const goButton = get('#go');
 
 const debug = get('#debug');
 const output = get('#output');
@@ -61,55 +66,6 @@ const ASMINTEL = 'asm';
 let mode = OPCODE;
 //assembler.option(ks.OPT_SYNTAX, ks.OPT_SYNTAX_INTEL);
 
-const flipEndian = s => {
-  const chunked = s.match(/.{1,2}/g); // chunks of 2
-  chunked.reverse();
-  return chunked.join('');
-};
-
-// always returns BIG-endian string
-const getOpcode = () => {
-  if (mode == OPCODE || mode == BYTES) {
-    const val = input.value.trim().replace(/^0x/, '').replace(/\s/g, '').padStart(8, '0');
-
-    if (val.length > 8) throw Error('opcode too long. expected at most 8 hex chars but got ' + val.length);
-    if (mode == OPCODE) return val;
-    document.getElementById("dispopcode").innerText = ""
-    return flipEndian(val);
-  } else {
-    try {
-      const res = assembly(input.value.trim())
-      console.log("Assembly: ", res)
-      if (res.failed) {
-        var msg  = ks.strerror(assembler.errno())
-        throw ("Assembly failed (error " + assembler.errno() + ") " + msg)
-      } 
-      const opcode = Array.from(res.mc.reverse()).map(x => x.toString(16).padStart(2, '0')).join("");
-      document.getElementById("dispopcode").innerText = "0x" + opcode
-      return opcode;
-    } catch (e) {
-      document.getElementById("dispopcode").innerText = e
-      return "00000000";
-    }
-  }
-}
-
-
-const setOpcodeMode = newMode => {
-  const op = getOpcode();
-  if (mode != newMode) {
-    mode = newMode;
-
-    if (mode == OPCODE) {
-      input.value = op.toLowerCase();
-    } else if (mode == BYTES) {
-      input.value = flipEndian(op).toUpperCase().match(/.{1,2}/g).join(' ');
-    } else {
-      input.value = "";
-    }
-  }
-};
-
 const outputData = [];
 let previousOpcode = null;
 let formData = null;
@@ -123,6 +79,7 @@ export const clearOutput = () => {
   clear.disabled = true;
   share.disabled = true;
   copyarea.value = '';
+  goButton.disabled = false;
 };
 
 export const downloadOutput = () => {
@@ -147,11 +104,14 @@ export const shareLink = () => {
   }
 };
 
-export const submit = () => {
+export const submit = async () => {
+  // goButton.disabled = true;
+  // await _debouncedSynchroniseInputs.signal();
+
   clearOutput();
 
   try {
-    previousOpcode = '0x' + getOpcode();
+    previousOpcode = opcodeInput.value.trim();
     formData = new FormData(form);
 
     const params = new URLSearchParams(formData).toString();
@@ -209,7 +169,7 @@ const fetchHeap = async () => {
 const init = async () => {
 
   window.submit = submit
-  window.setOpcodeMode = setOpcodeMode
+  // window.setOpcodeMode = setOpcodeMode
   window.clearOutput = clearOutput 
   window.shareLink = shareLink 
   window.downloadOutput= downloadOutput
@@ -219,71 +179,95 @@ const init = async () => {
   const buf = await resp.arrayBuffer();
   worker.postMessage(['unmarshal', buf]);
 
-  try {
-    const urlData = new URLSearchParams(window.location.search);
-    if (urlData.get('mode') != null) get(`input[name="mode"][value="${urlData.get('mode')}"]`).checked = true;
-    if (urlData.get('mode') != null) setOpcodeMode(urlData.get('mode'))
-    if (urlData.get('op') != null) op.value = urlData.get('op');
-    if (urlData.get('debug') != null) debug.value = urlData.get('debug');
-    if (urlData.size > 0) {
-      submit();
-    }
-  } finally { }
+  // try {
+  //   const urlData = new URLSearchParams(window.location.search);
+  //   if (urlData.get('mode') != null) get(`input[name="mode"][value="${urlData.get('mode')}"]`).checked = true;
+  //   if (urlData.get('mode') != null) setOpcodeMode(urlData.get('mode'))
+  //   if (urlData.get('op') != null) op.value = urlData.get('op');
+  //   if (urlData.get('debug') != null) debug.value = urlData.get('debug');
+  //   if (urlData.size > 0) {
+  //     submit();
+  //   }
+  // } finally { }
 
 };
 
 init();
 
-
-any([opcodeInput, bytesInput, asmInput]).on('input', ev => {
+const readInputs = el => {
   // opcode as UInt8Array of bytes, in little-endian order
   let bytes = null;
-  if (me(ev) === opcodeInput) {
-    let s = opcodeInput.value.trim()
-      .replace(/^0x/, '')
-      .padStart(8, '0')
-      .match(/.{1,2}/g);
-    bytes = new Uint8Array(s.map(x => parseIntSafe(x, 16)).reverse());
+  let err = null;
+  try {
 
-  } else if (me(ev) === bytesInput) {
-    let s = bytesInput.value.trim()
-      .replace(/\s/g, '')
-      .padEnd(8, '0')
-      .match(/.{1,2}/g);
-    bytes = new Uint8Array(s.map(x => parseIntSafe(x, 16)));
+    if (el === opcodeInput) {
+      let s = opcodeInput.value.trim()
+        .replace(/^0x/, '')
+        .padStart(8, '0')
+        .match(/.{1,2}/g);
+      bytes = new Uint8Array(s.map(x => parseIntSafe(x, 16)).reverse());
 
-  } else if (me(ev) === asmInput) {
-    const result = assembler.asm(asmInput.value.trim(), 0);
+    } else if (el === bytesInput) {
+      let s = bytesInput.value.trim()
+        .replace(/\s/g, '')
+        .padEnd(8, '0')
+        .match(/.{1,2}/g);
+      bytes = new Uint8Array(s.map(x => parseIntSafe(x, 16)));
 
-    if (result.failed) {
-      const errno = assembler.errno();
-      const msg = ks.strerror(errno);
-      throw new Error(`keystone assembly failed (error: ${errno} ${msg})`);
+    } else if (el === asmInput) {
+      const result = assembler.asm(asmInput.value.trim(), 0);
+
+      if (result.failed) {
+        const errno = assembler.errno();
+        const msg = ks.strerror(errno);
+        err = `${msg}`;
+        bytes = new Uint8Array([]);
+      } else {
+        bytes = result.mc;
+      }
+      // console.log(ks.strerror(assembler.errno()));
     }
-    if (result.count === 0) {
-      throw new Error('keystone assembly returned no bytes');
-    }
-    bytes = result.mc;
+
+  } catch (exn) {
+    bytes = new Uint8Array([]);
+    err = exn.toString();
   }
 
-  console.assert(bytes !== null, 'assertion failure in oninput handler.');
+  if (bytes.length > 4) {
+    err = "input too long";
+  }
 
-  // if (bytes.length !== 4)
-  //   throw new Error('bytes input should define at most 4 bytes');
+  return { bytes, err };
+};
+
+const synchroniseInputs = (writeback, el) => {
+  const { bytes, err } = readInputs(el);
+
+  console.assert(bytes !== null, 'assertion failure in oninput handler.');
   if (!bytes)
     return;
 
-  if (me(ev) !== opcodeInput)
-    opcodeInput.value = '0x' + Array.from(bytes).reverse().map(x => x.toString(16).padStart(2, '0').toLowerCase()).join('');
-  if (me(ev) !== bytesInput)
-    bytesInput.value = Array.from(bytes).map(x => x.toString(16).padStart(2, '0').toUpperCase()).join(' ');
-  if (me(ev) !== asmInput)
+  const toHexByte = x => x.toString(16).padStart(2, '0');
+
+  if (writeback || el !== opcodeInput) {
+    const hex = Array.from(bytes).reverse().map(toHexByte).join('').toLowerCase();
+    opcodeInput.value = hex !== '' ? `0x${hex}` : hex;
+  }
+
+  if (writeback || el !== bytesInput)
+    bytesInput.value = Array.from(bytes).map(toHexByte).join(' ').toUpperCase();
+
+  if (/* writeback || */ el !== asmInput) // no writeback as it would delete the user's asm input
     asmInput.value = '';
 
-  console.log(bytes);
+  inputError.textContent = err ? `${el.id} input: ${err}` : '';
+  goButton.disabled = !!err;
+  // console.log(bytes);
+};
 
+// XXX: not debounced because of race conditions...
+const _debouncedSynchroniseInputs = ev => synchroniseInputs(false, ev.target);
+any([opcodeInput, bytesInput, asmInput]).on('input', _debouncedSynchroniseInputs);
+any([opcodeInput, bytesInput, asmInput]).on('change', _debouncedSynchroniseInputs);
 
-
-
-  
-});
+me(form).on('submit', ev => { halt(ev); submit(ev); });
