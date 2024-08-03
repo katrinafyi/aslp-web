@@ -2,6 +2,10 @@
 <html>
   <head>
     <title>ASLp Web</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="keystone-aarch64.min.js" type="module"></script>
     <script defer type="text/javascript" src="js.bc.js"></script>
     <!-- <script defer type="text/javascript" src="pako.min.js"></script> -->
     <!-- <script defer type="text/javascript" src="cache.js"></script> -->
@@ -48,15 +52,17 @@
           <input onclick="setOpcodeMode('opcode');" type="radio" id="opcode" name="mode" value="opcode" checked />
           <label for="opcode">Opcode (big-endian)</label><br/>
           <input onclick="setOpcodeMode('bytes');" type="radio" id="bytes" name="mode" value="bytes" />
-          <label for="bytes">Bytes (little-endian)</label>
+          <label for="bytes">Bytes (little-endian)</label><br/>
+          <input onclick="setOpcodeMode('asm');" type="radio" id="asm" name="mode" value="asm" />
+          <label for="asm">Arm64 Assembly</label><br/>
         </p>
       </div>
       <p>
-        <input id="op" type="text" class="monospace" required autofocus name="op" value="0x8b031041"
-               pattern="[a-fA-F0-9x ]+" />
       </p>
-
-
+      <p>
+        <input id="op" type="text" class="monospace" required autofocus name="op" value="0x8b031041"/>
+        <pre id="dispopcode">  </pre>
+      </p>
         <details>
           <summary>Debug options</summary>
           <p>
@@ -98,6 +104,6 @@
     </form>
 
 
-    <script defer type="text/javascript" src="aslp.js"></script>
+    <script defer type="module" src="aslp.js"></script>
   </body>
 </html>
