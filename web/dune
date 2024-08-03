@@ -55,5 +55,6 @@
   worker.js
   cache.js
   aslp.heap
-  pako.min.js)
+  pako.min.js
+  surreal.js)
  (section lib))

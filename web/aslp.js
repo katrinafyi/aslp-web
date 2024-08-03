@@ -10,13 +10,15 @@ const get = query => {
   return result;
 };
 
-
-const assembler = new ks.Keystone(ks.ARCH_ARM64, ks.MODE_LITTLE_ENDIAN);
-
-const assembly = (assembly) => {
-  return assembler.asm(assembly, 0)
+const parseIntSafe = (s, radix) => {
+  const x = parseInt(s, radix);
+  if (isNaN(x)) throw new Error('parseInt returned NaN');
+  // if (x.toString(radix) !== s) throw new Error('parseInt partially failed');
+  return x;
 };
 
+
+const assembler = new ks.Keystone(ks.ARCH_ARM64, ks.MODE_LITTLE_ENDIAN);
 
 const worker = new Worker('worker.js');
 // worker.postMessage('a');
@@ -40,7 +42,11 @@ worker.onmessage = e => {
 };
 
 const form = get('#form');
-const input = get('#op');
+
+const opcodeInput = get('#opcode');
+const bytesInput = get('#bytes');
+const asmInput = get('#asm');
+
 const debug = get('#debug');
 const output = get('#output');
 const loading = get('#loading');
@@ -48,8 +54,6 @@ const download = get('#dl');
 const clear = get('#clear');
 const share = get('#share');
 const copyarea = get('#copy');
-
-import MKeystone from "./keystone-aarch64.min.js"
 
 const OPCODE = 'opcode';
 const BYTES = 'bytes';
@@ -77,7 +81,7 @@ const getOpcode = () => {
       const res = assembly(input.value.trim())
       console.log("Assembly: ", res)
       if (res.failed) {
-        var msg  = MKeystone.strerror(assembler.errno())
+        var msg  = ks.strerror(assembler.errno())
         throw ("Assembly failed (error " + assembler.errno() + ") " + msg)
       } 
       const opcode = Array.from(res.mc.reverse()).map(x => x.toString(16).padStart(2, '0')).join("");
@@ -230,3 +234,56 @@ const init = async () => {
 
 init();
 
+
+any([opcodeInput, bytesInput, asmInput]).on('input', ev => {
+  // opcode as UInt8Array of bytes, in little-endian order
+  let bytes = null;
+  if (me(ev) === opcodeInput) {
+    let s = opcodeInput.value.trim()
+      .replace(/^0x/, '')
+      .padStart(8, '0')
+      .match(/.{1,2}/g);
+    bytes = new Uint8Array(s.map(x => parseIntSafe(x, 16)).reverse());
+
+  } else if (me(ev) === bytesInput) {
+    let s = bytesInput.value.trim()
+      .replace(/\s/g, '')
+      .padEnd(8, '0')
+      .match(/.{1,2}/g);
+    bytes = new Uint8Array(s.map(x => parseIntSafe(x, 16)));
+
+  } else if (me(ev) === asmInput) {
+    const result = assembler.asm(asmInput.value.trim(), 0);
+
+    if (result.failed) {
+      const errno = assembler.errno();
+      const msg = ks.strerror(errno);
+      throw new Error(`keystone assembly failed (error: ${errno} ${msg})`);
+    }
+    if (result.count === 0) {
+      throw new Error('keystone assembly returned no bytes');
+    }
+    bytes = result.mc;
+  }
+
+  console.assert(bytes !== null, 'assertion failure in oninput handler.');
+
+  // if (bytes.length !== 4)
+  //   throw new Error('bytes input should define at most 4 bytes');
+  if (!bytes)
+    return;
+
+  if (me(ev) !== opcodeInput)
+    opcodeInput.value = '0x' + Array.from(bytes).reverse().map(x => x.toString(16).padStart(2, '0').toLowerCase()).join('');
+  if (me(ev) !== bytesInput)
+    bytesInput.value = Array.from(bytes).map(x => x.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+  if (me(ev) !== asmInput)
+    asmInput.value = '';
+
+  console.log(bytes);
+
+
+
+
+  
+});

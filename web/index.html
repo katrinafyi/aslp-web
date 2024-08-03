@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <script src="keystone-aarch64.min.js" type="module"></script>
     <script defer type="text/javascript" src="js.bc.js"></script>
     <!-- <script defer type="text/javascript" src="pako.min.js"></script> -->
     <!-- <script defer type="text/javascript" src="cache.js"></script> -->
@@ -46,23 +45,30 @@
 
   <body>
     <h1>ASLp Web</h1>
-    <form id="form" action="javascript:submit();">
+    <form id="form">
       <div>
         <p>
-          <input onclick="setOpcodeMode('opcode');" type="radio" id="opcode" name="mode" value="opcode" checked />
+          <!-- <input onclick="setOpcodeMode('opcode');" type="radio" id="opcode" name="mode" value="opcode" checked /> -->
           <label for="opcode">Opcode (big-endian)</label><br/>
-          <input onclick="setOpcodeMode('bytes');" type="radio" id="bytes" name="mode" value="bytes" />
+          <input id="opcode" type="text" class="monospace" required autofocus name="opcode" value="0x8b031041" pattern="0x[0-9a-fA-F]{1,8}"/>
+        </p>
+
+        <p>
+          <!-- <input onclick="setOpcodeMode('opcode');" type="radio" id="opcode" name="mode" value="opcode" checked /> -->
           <label for="bytes">Bytes (little-endian)</label><br/>
-          <input onclick="setOpcodeMode('asm');" type="radio" id="asm" name="mode" value="asm" />
-          <label for="asm">Arm64 Assembly</label><br/>
+          <input id="bytes" type="text" class="monospace" required name="bytes" value="41 10 03 8B" pattern="[0-9a-fA-F ]+"/>
+        </p>
+
+        <p>
+          <label for="asm">Arm64 assembly</label><br/>
+          <input id="asm" type="text" class="monospace" required name="asm" value="add x1, x2, x3, lsl #4"/>
         </p>
       </div>
+      <!-- <p> -->
+      <!--   <input id="op" type="text" class="monospace" required autofocus name="op" value="0x8b031041"/> -->
+      <!--   <pre id="dispopcode">  </pre> -->
+      <!-- </p> -->
       <p>
-      </p>
-      <p>
-        <input id="op" type="text" class="monospace" required autofocus name="op" value="0x8b031041"/>
-        <pre id="dispopcode">  </pre>
-      </p>
         <details>
           <summary>Debug options</summary>
           <p>
@@ -74,6 +80,7 @@
             </select>
           </p>
         </details>
+      </p>
 
       <p>
         <button id="go" submit>Semantics</button>
@@ -83,9 +90,9 @@
 
       <h4>Output</h4>
       <p>
-        <button onclick="downloadOutput();" disabled type=button class="small" id="dl">Download</button>
-        <button onclick="clearOutput();" disabled type=button class="small" id="clear">Clear</button>
-        <button onclick="shareLink();" disabled type=button class="small" id="share">Share</button>
+        <button disabled type=button class="small" id="dl">Download</button>
+        <button disabled type=button class="small" id="clear">Clear</button>
+        <button disabled type=button class="small" id="share">Share</button>
         <input class="small" id="copy" type="text" readonly>
       </p>
 
@@ -105,5 +112,6 @@
 
 
     <script defer type="module" src="aslp.js"></script>
+    <script src="surreal.js"></script>
   </body>
 </html>
