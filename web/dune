@@ -58,5 +58,7 @@
 
   pako.min.js
   surreal.js
-  throttle-debounce.js)
+  ; throttle-debounce.js
+  ; debounce.js
+  )
  (section lib))
