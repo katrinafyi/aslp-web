@@ -3,6 +3,7 @@
  */
 
 import ks from "./keystone-aarch64.min.js";
+const cs = window.cs; // capstone non-module
 
 /** Queries for a single matching element, asserting that at least one exists. */
 const get = query => {
@@ -151,7 +152,8 @@ const write = (isError) => s => {
  */
 
 
-const assembler = new ks.Keystone(ks.ARCH_ARM64, ks.MODE_LITTLE_ENDIAN);
+const keystone = new ks.Keystone(ks.ARCH_ARM64, ks.MODE_LITTLE_ENDIAN);
+const capstone = new cs.Capstone(cs.ARCH_ARM64, cs.MODE_LITTLE_ENDIAN);
 
 const readInputs = el => {
   // opcode as UInt8Array of bytes, in little-endian order
@@ -174,10 +176,10 @@ const readInputs = el => {
       bytes = new Uint8Array(s.map(x => parseIntSafe(x, 16)));
 
     } else if (el === asmInput) {
-      const result = assembler.asm(asmInput.value.trim(), 0);
+      const result = keystone.asm(asmInput.value.trim(), 0);
 
       if (result.failed) {
-        const errno = assembler.errno();
+        const errno = keystone.errno();
         const msg = ks.strerror(errno);
         err = `${msg}`;
         bytes = new Uint8Array([]);
@@ -216,8 +218,14 @@ const synchroniseInputs = (writeback, el) => {
   if (writeback || el !== bytesInput)
     bytesInput.value = Array.from(bytes).map(toHexByte).join(' ').toUpperCase();
 
-  if (/* writeback || */ el !== asmInput) // no writeback as it would delete the user's asm input
-    asmInput.value = '';
+  if (/* writeback || */ el !== asmInput) { // no writeback as it would delete the user's asm input
+    let mnemonic = '';
+    try {
+      const isns = capstone.disasm(Array.from(bytes), 0);
+      mnemonic = isns[0].mnemonic + ' ' + isns[0].op_str;
+    } catch (exn) { }
+    asmInput.value = mnemonic;
+  }
 
   inputError.textContent = err ? `${el.id} input: ${err}` : '';
   goButton.disabled = !!err;

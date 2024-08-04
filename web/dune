@@ -51,6 +51,7 @@
   index.html
   reset.css
   keystone-aarch64.min.js
+  capstone-arm64.min.js
   aslp.js
   worker.js
   cache.js
