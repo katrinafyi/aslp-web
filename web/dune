@@ -49,11 +49,17 @@
   (jstemp.bc.js as js.bc.js)
   (jstemp.bc.map as js.bc.map)
   index.html
-  keystone-aarch64.min.js
   reset.css
+  keystone-aarch64.min.js
+  capstone-arm64.min.js
   aslp.js
   worker.js
   cache.js
   aslp.heap
-  pako.min.js)
+
+  pako.min.js
+  surreal.js
+  ; throttle-debounce.js
+  ; debounce.js
+  )
  (section lib))
