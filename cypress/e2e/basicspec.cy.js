@@ -9,6 +9,15 @@ describe('aslp-web tests', () => {
     });
   });
 
+  it('synchronises with little-endian input', () => {
+    cy.aslpweb().then(() => {
+      cy.getByLabel('little-endian').type('{selectall}41 00 03 AA').then(x => {
+        cy.getByLabel('big-endian').should('have.value', '0xaa030041');
+        cy.getByLabel('assembly').should('have.value', 'orr x1, x2, x3');
+      });
+    });
+  });
+
   it('synchronises with asm input', () => {
     cy.aslpweb().then(() => {
       cy.getByLabel('assembly').type('{selectall}orr x1, x2, x3').then(x => {
