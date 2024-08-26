@@ -1,48 +1,40 @@
-importScripts('js.bc.js', 'pako.min.js', 'cache.js');
+importScripts('js.bc.js', 'pako.min.js', 'cache.js', 'comlink.js');
 
-const init = (async () => {
-  libASL_web.init(
-    s => postMessage(['out', s]),
-    s => postMessage(['err', s]));
-})();
-
-let resolveCached;
-const cached = new Promise((resolve) => {
-  resolveCached = () => {
-    resolve();
-    postMessage(['rdy', 'x']);
-  };
-});
-
-onmessage = async (message) => {
+const formatOCamlExceptions = f => (...args) => {
   try {
-    console.log('worker:', message.data);
-
-    await init;
-    const [cmd, arg] = message.data;
-
-    if (cmd === 'unmarshal') {
-      unmarshal(arg);
-      resolveCached();
-    } else if (cmd === 'dis') {
-      await cached;
-      const {opcode, debug} = arg;
-      libASL_web.setDebugLevel(debug);
-      libASL_web.dis(opcode);
-    } else {
-      throw new Error('unrecognised worker command: ' + message.cmd, message.data);
-    }
-    
+    f(...args);
   } catch (e) {
-    const s = (e instanceof Error)
-      ? e.toString()
-      : libASL_web.printException(e);
-    postMessage(['err', s]);
-
-    if (e instanceof Error) {
+    if (e instanceof Array) {
+      // convert ocaml representation of errors into
+      // javascript representation.
+      setTimeout(() => { throw e; }, 0);
+    } else {
       throw e;
     }
-  } finally {
-    if (message.data[0] === 'dis') postMessage(['fin', 'x']);
   }
-}
+};
+
+const methods = {
+  init: formatOCamlExceptions((out, err) => {
+    // XXX: do not eta reduce, functions must return nothing.
+    libASL_web.init(
+      s => { out(s); },
+      s => { err(s); });
+  }),
+
+  boop: f => {
+    f(100); // testing
+  },
+
+  unmarshal: formatOCamlExceptions((arraybuf) => {
+    unmarshal(arraybuf);
+  }),
+
+  dis: formatOCamlExceptions(({opcode, debug}) => {
+    libASL_web.setDebugLevel(debug);
+    libASL_web.dis(opcode);
+  }),
+
+};
+
+Comlink.expose(methods);

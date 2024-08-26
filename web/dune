@@ -50,15 +50,20 @@
   (jstemp.bc.map as js.bc.map)
   index.html
   reset.css
-  keystone-aarch64.min.js
-  capstone-arm64.min.js
   aslp.js
   worker.js
+  worker-stone.js
   cache.js
   aslp.heap
 
+  ; third-party libraries
   pako.min.js
   surreal.js
+  comlink.js
+  comlink.mjs
+  memize.js
+  keystone-aarch64.min.js
+  capstone-arm64.min.js
   ; throttle-debounce.js
   ; debounce.js
   )
