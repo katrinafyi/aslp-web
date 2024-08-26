@@ -1,4 +1,4 @@
-importScripts('js.bc.js', 'pako.min.js', 'cache.js', 'comlink.js');
+importScripts('js.bc.js', 'cache.js', 'lib/pako.min.js', 'lib/comlink.js');
 
 const formatOCamlExceptions = f => (...args) => {
   try {
@@ -30,7 +30,7 @@ const methods = {
     unmarshal(arraybuf);
   }),
 
-  dis: formatOCamlExceptions(({opcode, debug}) => {
+  dis: formatOCamlExceptions(({ opcode, debug }) => {
     libASL_web.setDebugLevel(debug);
     libASL_web.dis(opcode);
   }),

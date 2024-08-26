@@ -1,10 +1,10 @@
-import * as Comlink from './comlink.mjs';
-import ks from './keystone-aarch64.min.js';
-import cs from './capstone-arm64.min.js';
+import * as Comlink from './lib/comlink.mjs';
+import ks from './lib/keystone-aarch64.min.js';
+import cs from './lib/capstone-arm64.min.js';
 
 const keystone = new ks.Keystone(ks.ARCH_ARM64, ks.MODE_LITTLE_ENDIAN);
 const capstone = new cs.Capstone(cs.ARCH_ARM64, cs.MODE_LITTLE_ENDIAN);
-console.log('stone:', keystone, capstone);
+console.log('stones:', keystone, capstone);
 
 const memo = {
   asm2bytes: {},
@@ -18,7 +18,7 @@ const memoise = (key, preprocess, f) => (...args) => {
 
   const old = memo[key][argskey];
   memo[key][argskey] = (old === undefined ? f(...args) : old);
-  console.log(memo);
+  // console.log(memo);
   return memo[key][argskey];
 }
 
@@ -46,7 +46,7 @@ const methods = {
     };
   }),
 
-  bytes2asm: memoise('bytes2asm', x => x, (uint8array) => {
+  bytes2asm: memoise('bytes2asm', null, (uint8array) => {
     const isns = capstone.disasm(uint8array, 0);
     const mnemonic = isns[0].mnemonic + ' ' + isns[0].op_str;
 

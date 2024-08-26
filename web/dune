@@ -32,14 +32,14 @@
 
 (rule
  (target aslp.heap)
- (deps builder.bc.js pako.min.js cache.js)
+ (deps builder.bc.js lib/pako.min.js cache.js)
  (action
   (run node ./cache.js)))
 
 ; javascript executable to build aslp.heap
 
 (install
- (files builder.bc.js pako.min.js cache.js)
+ (files builder.bc.js cache.js)
  (section bin))
 
 ; static files for distribution
@@ -56,15 +56,4 @@
   cache.js
   aslp.heap
 
-  ; third-party libraries
-  pako.min.js
-  surreal.js
-  comlink.js
-  comlink.mjs
-  memize.js
-  keystone-aarch64.min.js
-  capstone-arm64.min.js
-  ; throttle-debounce.js
-  ; debounce.js
-  )
- (section lib))
+  ) (section lib))

@@ -2,7 +2,7 @@
  * Supporting code to enable ASLp-in-JS. Handles input/output.
  */
 
-import * as Comlink from "./comlink.mjs";
+import * as Comlink from "./lib/comlink.mjs";
 
 /** Queries for a single matching element, asserting that at least one exists. */
 const get = query => {

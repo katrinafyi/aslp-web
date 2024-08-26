@@ -1,0 +1,14 @@
+
+; third-party libraries
+(install
+ (files
+  (glob_files (*.js with_prefix lib))
+  (glob_files (*.mjs with_prefix lib))
+  )
+ (section lib))
+
+(install
+ (files
+  (glob_files (pako.min.js with_prefix lib))
+  )
+ (section bin))
