@@ -7,6 +7,9 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+env:
+  COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,6 +20,8 @@ jobs:
         with:
           extra-conf: |
             accept-flake-config = true
+
+      - run: find . -type f -exec sed -i "s/@aslp_web_commit@/$COMMIT/g" {} \;
 
       - run: nix build .
 
@@ -41,7 +46,7 @@ jobs:
           name: aslp-web-build
           path: result
 
-      - run: ls -lR result
+      - run: ls -lhR result
 
       - uses: cypress-io/github-action@v6
         with:
