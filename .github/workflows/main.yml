@@ -2,7 +2,9 @@ name: Build and test aslp-web
 
 on:
   push:
-    branches: ["main"]
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -21,9 +23,8 @@ jobs:
           extra-conf: |
             accept-flake-config = true
 
-      - run: find . -type f -exec sed -i "s/@aslp_web_commit@/$COMMIT/g" {} \;
-
-      - run: nix build .
+      - run: echo $COMMIT > ./COMMIT && git add COMMIT
+      - run: nix build -L .
 
       - run: cp -rv result/lib/ocaml/*/site-lib/aslp_web artifact
 
