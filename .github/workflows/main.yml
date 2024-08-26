@@ -1,0 +1,29 @@
+name: Build and test aslp-web
+
+on:
+  push:
+    branches: ["main"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        browser: [ electron, chrome, firefox ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - run: nix build .
+
+      - uses: cypress-io/github-action@v6
+        with:
+          start: "python3 -m http.server -d result/lib/ocaml/5.1.1/site-lib/aslp_web 10000"
+          browser: ${{ matrix.browser }}
+
