@@ -21,10 +21,16 @@ describe('aslp-web tests', () => {
   it('disassembles', () => {
     cy.aslpweb().then(() => {
       cy.getByLabel('big-endian').type('{selectall}0xaa030041').then(x => {
-        cy.get('form').submit().then(x => {
+        cy.get('button[type=submit]').click().then(x => {
           cy.get('#output').should('contain', 'aarch64_integer_logical_shiftedreg').and('contain', 'or_bits');
         });
       });
+    });
+  });
+
+  it('parses options from url', () => {
+    cy.aslpweb('?opcode=0xaa030041&bytes=41+00+03+AA&asm=orr+x1%2C+x2%2C+x3&debug=1').then(() => {
+      cy.get('#output').should('contain', 'aarch64_integer_logical_shiftedreg').and('contain', 'or_bits').and('contain', 'dis_decode_case');
     });
   });
 

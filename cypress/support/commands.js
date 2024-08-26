@@ -35,7 +35,7 @@ Cypress.Commands.add('getByLabel', (label) => {
     });
 })
 
-Cypress.Commands.add('aslpweb', () => {
-  cy.visit('http://localhost:10000/');
+Cypress.Commands.add('aslpweb', (query) => {
+  cy.visit('http://localhost:10000/' + (query ?? ''));
   return cy.contains('Loading').filter(':hidden');
 })
