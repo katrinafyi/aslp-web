@@ -186,7 +186,7 @@ const readInputs = async el => {
 };
 
 const synchroniseInputs = async (writeback, el) => {
-  const { bytes, err } = await readInputs(el);
+  let { bytes, err } = await readInputs(el);
 
   console.assert(bytes !== null, 'assertion failure in oninput handler.');
   if (!bytes)
@@ -205,9 +205,10 @@ const synchroniseInputs = async (writeback, el) => {
   if (/* writeback || */ el !== asmInput) { // no writeback as it would delete the user's asm input
     let mnemonic = '';
     try {
-      mnemonic = await stoneworker.bytes2asm(Comlink.transfer(bytes, [bytes.buffer]));
+      mnemonic = !err ? await stoneworker.bytes2asm(Comlink.transfer(bytes, [bytes.buffer])) : '';
     } catch (exn) {
-      console.error('error in bytes2asm:', exn);
+      err = err || exn.toString();
+      // console.error('error in bytes2asm:', exn);
     }
     asmInput.value = mnemonic;
   }
