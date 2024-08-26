@@ -1,0 +1,22 @@
+{
+  "name": "aslp-web",
+  "description": "This provides a simple web interface for the ASLp partial evaluator.",
+  "version": "1.0.0",
+  "main": "cypress.config.js",
+  "devDependencies": {
+    "cypress": "^13.13.3"
+  },
+  "scripts": {
+    "test": "cypress run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/katrinafyi/aslp-web.git"
+  },
+  "author": "rina",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/katrinafyi/aslp-web/issues"
+  },
+  "homepage": "https://github.com/katrinafyi/aslp-web#readme"
+}
