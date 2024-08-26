@@ -214,7 +214,7 @@ const synchroniseInputs = async (writeback, el) => {
   }
 
   inputError.textContent = err ? `${el.id} input: ${err}` : '';
-  goButton.disabled = !!err;
+  // goButton.disabled = !!err;
   // console.log(bytes);
 };
 
