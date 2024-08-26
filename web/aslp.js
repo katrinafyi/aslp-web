@@ -2,8 +2,9 @@
  * Supporting code to enable ASLp-in-JS. Handles input/output.
  */
 
-import ks from "./keystone-aarch64.min.js"
+import * as Comlink from "./lib/comlink.mjs";
 
+/** Queries for a single matching element, asserting that at least one exists. */
 const get = query => {
   const result = document.querySelector(query);
   console.assert(result, "query returned null: " + query);
@@ -11,100 +12,65 @@ const get = query => {
 };
 
 
-const assembler = new ks.Keystone(ks.ARCH_ARM64, ks.MODE_LITTLE_ENDIAN);
-
-const assembly = (assembly) => {
-  return assembler.asm(assembly, 0)
-};
-
-
-const worker = new Worker('worker.js');
-// worker.postMessage('a');
-worker.onmessage = e => {
-  // console.log(e.data);
-  const [stream, message] = e.data;
-  // if (stream === 'exn') throw message;
-  if (stream === 'rdy') {
-    console.log('ready:', e.data);
-    loading.classList.add('invisible');
-  } else if (stream === 'fin') {
-    console.log('finish:', e.data);
-    dl.disabled = false;
-    clear.disabled = false;
-    share.disabled = false;
-  } else if (stream === 'err' || stream === 'out') {
-    requestAnimationFrame(() => write(stream === 'err')(message));
-  } else {
-    console.error('unknown:', e.data);
-  }
-};
-
 const form = get('#form');
-const input = get('#op');
-const debug = get('#debug');
-const output = get('#output');
-const loading = get('#loading');
-const download = get('#dl');
-const clear = get('#clear');
-const share = get('#share');
-const copyarea = get('#copy');
 
-import MKeystone from "./keystone-aarch64.min.js"
+const opcodeInput = get('#opcode');
+const bytesInput = get('#bytes');
+const asmInput = get('#asm');
+const inputError = get('#inputerror');
 
-const OPCODE = 'opcode';
-const BYTES = 'bytes';
-const ASMINTEL = 'asm';
-let mode = OPCODE;
-//assembler.option(ks.OPT_SYNTAX, ks.OPT_SYNTAX_INTEL);
+const goButton = get('#go');
 
-const flipEndian = s => {
-  const chunked = s.match(/.{1,2}/g); // chunks of 2
-  chunked.reverse();
-  return chunked.join('');
+const debugInput = get('#debug');
+const outputArea = get('#output');
+const loadingText = get('#loading');
+const downloadButton = get('#dl');
+const clearButton = get('#clear');
+const shareButton = get('#share');
+const copyArea = get('#copy');
+
+
+/** Parses an integer while detecting suprious characters. */
+const parseIntSafe = (s, radix) => {
+  const x = parseInt(s, radix);
+  if (isNaN(x)) throw new Error('parseInt returned NaN');
+  if (radix === 16 && !s.match(/^[0-9a-fA-F]+$/)) throw new Error('invalid hexadecimal number');
+  if (radix === 10 && !s.match(/^[0-9]+$/)) throw new Error('invalid decimal number');
+  return x;
 };
 
-// always returns BIG-endian string
-const getOpcode = () => {
-  if (mode == OPCODE || mode == BYTES) {
-    const val = input.value.trim().replace(/^0x/, '').replace(/\s/g, '').padStart(8, '0');
 
-    if (val.length > 8) throw Error('opcode too long. expected at most 8 hex chars but got ' + val.length);
-    if (mode == OPCODE) return val;
-    document.getElementById("dispopcode").innerText = ""
-    return flipEndian(val);
-  } else {
-    try {
-      const res = assembly(input.value.trim())
-      console.log("Assembly: ", res)
-      if (res.failed) {
-        var msg  = MKeystone.strerror(assembler.errno())
-        throw ("Assembly failed (error " + assembler.errno() + ") " + msg)
-      } 
-      const opcode = Array.from(res.mc.reverse()).map(x => x.toString(16).padStart(2, '0')).join("");
-      document.getElementById("dispopcode").innerText = "0x" + opcode
-      return opcode;
-    } catch (e) {
-      document.getElementById("dispopcode").innerText = e
-      return "00000000";
-    }
+const _write = (isError) => s => requestAnimationFrame(() => {
+  const span = document.createElement('span');
+  const data = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) {
+    data[i] = s.charCodeAt(i);
   }
-}
+  outputData.push(data);
+  span.textContent = new TextDecoder('utf-8').decode(data);
+  if (isError)
+    span.classList.add('stderr');
+  outputArea.appendChild(span);
+  return 0;
+});
+const write = { out: _write(false), err: _write(true), };
+
+const worker = Comlink.wrap(new Worker('worker.js'));
+const stoneworker = Comlink.wrap(new Worker('worker-stone.js', { type: 'module' }));
+
+await worker.boop(Comlink.proxy(console.log));
+
+await worker.init(
+  Comlink.proxy(write.out),
+  Comlink.proxy(write.err)
+);
+
+console.log('ready');
 
 
-const setOpcodeMode = newMode => {
-  const op = getOpcode();
-  if (mode != newMode) {
-    mode = newMode;
-
-    if (mode == OPCODE) {
-      input.value = op.toLowerCase();
-    } else if (mode == BYTES) {
-      input.value = flipEndian(op).toUpperCase().match(/.{1,2}/g).join(' ');
-    } else {
-      input.value = "";
-    }
-  }
-};
+/**
+ * OUTPUT INTERACTION (CLEAR, DOWNLOAD, SHARE)
+ */
 
 const outputData = [];
 let previousOpcode = null;
@@ -114,11 +80,12 @@ export const clearOutput = () => {
   outputData.length = 0;
   previousOpcode = null;
   formData = null;
-  output.innerHTML = '';
+  outputArea.innerHTML = '';
   dl.disabled = true;
-  clear.disabled = true;
-  share.disabled = true;
-  copyarea.value = '';
+  clearButton.disabled = true;
+  shareButton.disabled = true;
+  copyArea.value = '';
+  goButton.disabled = false;
 };
 
 export const downloadOutput = () => {
@@ -134,54 +101,126 @@ export const downloadOutput = () => {
 };
 
 export const shareLink = () => {
-  if (copyarea.value.trim() != '') {
-    history.pushState({}, null, copyarea.value);
+  if (copyArea.value.trim() != '') {
+    history.pushState({}, null, copyArea.value);
 
-    copyarea.focus();
-    copyarea.select();
+    copyArea.focus();
+    copyArea.select();
     document.execCommand('copy');
   }
 };
 
-export const submit = () => {
+/**
+ * SEMANTICS BUTTON CLICK AND OUTPUT WRITING
+ */
+
+export const submit = async () => {
   clearOutput();
 
   try {
-    previousOpcode = '0x' + getOpcode();
+    previousOpcode = opcodeInput.value.trim();
     formData = new FormData(form);
 
     const params = new URLSearchParams(formData).toString();
     const url = new URL(window.location.href);
     url.search = '?' + params;
 
-    copyarea.value = url.toString();
+    copyArea.value = url.toString();
 
-    const arg = {opcode: previousOpcode, debug: parseInt(debug.value)};
-    worker.postMessage(['dis', arg]);
+    const arg = { opcode: previousOpcode, debug: parseInt(debugInput.value) };
+    await worker.dis(arg);
 
   } catch (e) {
     if (e instanceof Error) {
-      write(true)(e.toString());
+      write.err(e.toString());
     } else {
       throw e;
     }
-  } finally { }
-};
-
-const write = (isError) => s => {
-  const span = document.createElement('span');
-  const data = new Uint8Array(s.length);
-  for (let i = 0; i < s.length; i++) {
-    data[i] = s.charCodeAt(i);
+  } finally {
+    dl.disabled = false;
+    clearButton.disabled = false;
+    shareButton.disabled = false;
   }
-  outputData.push(data);
-  span.textContent = new TextDecoder('utf-8').decode(data);
-  if (isError)
-    span.classList.add('stderr');
-  output.appendChild(span);
-  return 0;
 };
 
+
+/**
+ * OPCODE INPUT HANDLING
+ */
+
+
+const readInputs = async el => {
+  // opcode as UInt8Array of bytes, in little-endian order
+  let bytes = null;
+  let err = null;
+  try {
+
+    if (el === opcodeInput) {
+      let s = opcodeInput.value.trim()
+        .replace(/^0x/, '')
+        .padStart(8, '0')
+        .match(/.{1,2}/g);
+      bytes = new Uint8Array(s.map(x => parseIntSafe(x, 16)).reverse());
+
+    } else if (el === bytesInput) {
+      let s = bytesInput.value.trim()
+        .replace(/\s/g, '')
+        .padEnd(8, '0')
+        .match(/.{1,2}/g);
+      bytes = new Uint8Array(s.map(x => parseIntSafe(x, 16)));
+
+    } else if (el === asmInput) {
+      ({ bytes, err } = await stoneworker.asm2bytes(asmInput.value));
+    }
+
+  } catch (exn) {
+    bytes = new Uint8Array([]);
+    err = exn.toString();
+  }
+
+  if (bytes.length > 4) {
+    err = "input too long";
+  }
+
+  return { bytes, err };
+};
+
+const synchroniseInputs = async (writeback, el) => {
+  const { bytes, err } = await readInputs(el);
+
+  console.assert(bytes !== null, 'assertion failure in oninput handler.');
+  if (!bytes)
+    return;
+
+  const toHexByte = x => x.toString(16).padStart(2, '0');
+
+  if (writeback || el !== opcodeInput) {
+    const hex = Array.from(bytes).reverse().map(toHexByte).join('').toLowerCase();
+    opcodeInput.value = hex !== '' ? `0x${hex}` : hex;
+  }
+
+  if (writeback || el !== bytesInput)
+    bytesInput.value = Array.from(bytes).map(toHexByte).join(' ').toUpperCase();
+
+  if (/* writeback || */ el !== asmInput) { // no writeback as it would delete the user's asm input
+    let mnemonic = '';
+    try {
+      mnemonic = await stoneworker.bytes2asm(Comlink.transfer(bytes, [bytes.buffer]));
+    } catch (exn) {
+      console.error('error in bytes2asm:', exn);
+    }
+    asmInput.value = mnemonic;
+  }
+
+  inputError.textContent = err ? `${el.id} input: ${err}` : '';
+  goButton.disabled = !!err;
+  // console.log(bytes);
+};
+
+
+/**
+ * INITIALISATION CODE ON STARTUP
+ */
 
 const HEAP = 'aslp.heap';
 const fetchHeap = async () => {
@@ -205,28 +244,43 @@ const fetchHeap = async () => {
 const init = async () => {
 
   window.submit = submit
-  window.setOpcodeMode = setOpcodeMode
-  window.clearOutput = clearOutput 
-  window.shareLink = shareLink 
-  window.downloadOutput= downloadOutput
+  // window.setOpcodeMode = setOpcodeMode
+  window.clearOutput = clearOutput
+  window.shareLink = shareLink
+  window.downloadOutput = downloadOutput
+
+  const urlData = new URLSearchParams(window.location.search);
+  try {
+    if (urlData.get('opcode') != null) opcodeInput.value = urlData.get('opcode');
+    if (urlData.get('bytes') != null) bytesInput.value = urlData.get('bytes');
+    if (urlData.get('asm') != null) asmInput.value = urlData.get('asm');
+    if (urlData.get('debug') != null) debugInput.value = urlData.get('debug');
+  } catch (exn) {
+    console.error('exception during url loading:', exn);
+  }
 
   const resp = await fetchHeap();
   if (!resp.ok) throw new Error('fetch failure');
   const buf = await resp.arrayBuffer();
-  worker.postMessage(['unmarshal', buf]);
+  await worker.unmarshal(Comlink.transfer(buf));
+  loadingText.classList.add('invisible');
 
-  try {
-    const urlData = new URLSearchParams(window.location.search);
-    if (urlData.get('mode') != null) get(`input[name="mode"][value="${urlData.get('mode')}"]`).checked = true;
-    if (urlData.get('mode') != null) setOpcodeMode(urlData.get('mode'))
-    if (urlData.get('op') != null) op.value = urlData.get('op');
-    if (urlData.get('debug') != null) debug.value = urlData.get('debug');
-    if (urlData.size > 0) {
-      submit();
-    }
-  } finally { }
-
+  if (urlData.size > 0) {
+    await submit();
+  }
 };
 
-init();
 
+// XXX: not debounced because of race conditions...
+const _debouncedSynchroniseInputs = ev => synchroniseInputs(false, ev.target);
+any([opcodeInput, bytesInput, asmInput]).on('input', _debouncedSynchroniseInputs);
+any([opcodeInput, bytesInput, asmInput]).on('change', _debouncedSynchroniseInputs);
+
+me(form).on('submit', ev => { halt(ev); submit(ev); });
+
+me(shareButton).on('click', shareLink);
+me(downloadButton).on('click', downloadOutput);
+me(clearButton).on('click', clearOutput);
+
+
+init();

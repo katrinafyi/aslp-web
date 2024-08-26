@@ -35,3 +35,25 @@ repository.
 
 The build can be run using `./build.py`.
 Deployment is done by GitHub actions using this same script.
+
+## implementation
+
+All of this website's functionality is implemented within the browser.
+The primary ASLp features are via js\_of\_ocaml, with the build
+configured by the dune files in this repository.
+For the input boxes, the disassembly/assembly is provided by
+[capstone.js](https://github.com/rina-forks/capstone.js) /
+[keystone.js](https://github.com/ailrst/keystone.js).
+These are forks of the AlexAltea repositories, updated
+with more recent Emscripten and capstone/keystone.
+These, along with a number of pure Javascript libaries,
+are vendored within the web/lib directory.
+See the respective files for their licence information.
+
+The code is split across the main Javascript file and web workers.
+Web workers are used to isolate the computationally-heavy tasks
+without blocking the main UI thread.
+Currently, there are web workers for the ASLp functionality and the
+Capstone/Keystone functionality.
+
+

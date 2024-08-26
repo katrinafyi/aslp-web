@@ -32,14 +32,14 @@
 
 (rule
  (target aslp.heap)
- (deps builder.bc.js pako.min.js cache.js)
+ (deps builder.bc.js lib/pako.min.js cache.js)
  (action
   (run node ./cache.js)))
 
 ; javascript executable to build aslp.heap
 
 (install
- (files builder.bc.js pako.min.js cache.js)
+ (files builder.bc.js cache.js)
  (section bin))
 
 ; static files for distribution
@@ -49,11 +49,11 @@
   (jstemp.bc.js as js.bc.js)
   (jstemp.bc.map as js.bc.map)
   index.html
-  keystone-aarch64.min.js
   reset.css
   aslp.js
   worker.js
+  worker-stone.js
   cache.js
   aslp.heap
-  pako.min.js)
- (section lib))
+
+  ) (section lib))

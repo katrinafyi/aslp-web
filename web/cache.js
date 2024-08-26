@@ -6,7 +6,7 @@ if (IS_NODE) {
   global.path = require('path');
   // global.libASL_web = require('./js.bc.js').libASL_web;
   global.libASL_builder = require('./builder.bc.js').libASL_builder;
-  global.pako = require('./pako.min.js');
+  global.pako = require('./lib/pako.min.js');
 }
 
 const marshal = () => {
