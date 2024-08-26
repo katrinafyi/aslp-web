@@ -8,7 +8,7 @@ Screenshot:
 
 ## build
 
-To build the interface, you will need: the Dune build system, the ASLp OCaml package, and NodeJS.
+To build the interface, you will need: the Dune build system, the ASLp OCaml package, and NodeJS. 
 ```
 opam install --deps-only ./*.opam
 ```
@@ -21,6 +21,8 @@ dune build @install
 ```
 This builds the website to `_build/install/default/lib/aslp_web`.
 This directory can be uploaded to a static website hosting service.
+
+Note: Although a package.json is present, NPM is _not_ required (or able) to build this project. This is used only for the Cypress E2E tests. It is a design goal to avoid NPM as far as possible.
 
 ## deploy
 
