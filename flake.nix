@@ -1,6 +1,9 @@
 {
   inputs.pac-nix.url = "github:katrinafyi/pac-nix";
 
+  nixConfig.extra-substituters = [ "https://pac-nix.cachix.org/" ];
+  nixConfig.extra-trusted-public-keys = [ "pac-nix.cachix.org-1:l29Pc2zYR5yZyfSzk1v17uEZkhEw0gI4cXuOIsxIGpc=" ];
+
   outputs = {self, pac-nix}:
     let
       nixpkgs = pac-nix.inputs.nixpkgs;

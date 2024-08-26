@@ -9,21 +9,42 @@ on:
 
 jobs:
   build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: DeterminateSystems/nix-installer-action@main
+        with:
+          extra-conf: |
+            accept-flake-config = true
+
+      - run: nix build .
+
+      - run: cp -rv result/lib/ocaml/*/site-lib/aslp_web artifact
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aslp-web-build
+          path: artifact
+
+  test:
+    needs: [ build ]
     strategy:
       matrix:
         browser: [ electron, chrome, firefox ]
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - uses: actions/download-artifact@v4
+        with:
+          name: aslp-web-build
+          path: result
 
-      - run: nix build .
+      - run: ls -lR result
 
       - uses: cypress-io/github-action@v6
         with:
-          start: "python3 -m http.server -d result/lib/ocaml/5.1.1/site-lib/aslp_web 10000"
+          start: "python3 -m http.server -d result 10000"
           browser: ${{ matrix.browser }}
 
