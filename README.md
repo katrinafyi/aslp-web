@@ -22,21 +22,15 @@ dune build @install
 This builds the website to `_build/install/default/lib/aslp_web`.
 This directory can be uploaded to a static website hosting service.
 
-Note: Although a package.json is present, NPM is _not_ required (or able) to build this project. This is used only for the Cypress E2E tests. It is a design goal to avoid NPM as far as possible.
+Note: Although a package.json is present, NPM is _not_ required (or able) to build this project.
+This is used only for the Cypress E2E tests. Efforts are made to avoid NPM as far as possible.
 
 ## deploy
 
 The deployment of the live version of the interface is handled by code in the
 [`deploy`](https://github.com/katrinafyi/aslp-web/tree/deploy)
 branch of this repository.
-
-This contains scripts to reproducibly build multiple versions of the aslp-web interface
-(so links to aslp-web output are reproducible and permanent).
-This is done by building pinned versions of aslp-web and aslp from the [pac-nix](https://github.com/katrinafyi/pac-nix)
-repository.
-
-The build can be run using `./build.py`.
-Deployment is done by GitHub actions using this same script.
+See the branch README for more details.
 
 ## implementation
 
@@ -57,5 +51,8 @@ Web workers are used to isolate the computationally-heavy tasks
 without blocking the main UI thread.
 Currently, there are web workers for the ASLp functionality and the
 Capstone/Keystone functionality.
+
+Basic end-to-end tests are written using the Cypress framework and
+run by GitHub actions on push.
 
 
