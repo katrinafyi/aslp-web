@@ -2,7 +2,7 @@ importScripts('js.bc.js', 'cache.js', 'lib/pako.min.js', 'lib/comlink.js');
 
 const formatOCamlExceptions = f => (...args) => {
   try {
-    f(...args);
+    return f(...args);
   } catch (e) {
     if (e instanceof Array) {
       // convert ocaml representation of errors into
