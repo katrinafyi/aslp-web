@@ -1,6 +1,11 @@
 # ASLp Web Deployment
 
-This branch controls the deployment of the aslp-web site to GitHub pages.
+This branch controls the deployment of the aslp-web site to GitHub pages, with
+scripts to reproducibly build multiple versions of the aslp-web interface
+(so links to aslp-web output are reproducible and permanent).
+This is done by building pinned versions of aslp-web and aslp
+from the [pac-nix](https://github.com/katrinafyi/pac-nix) repository.
+
 
 ## building
 
@@ -12,6 +17,7 @@ The site can be built with:
 ```
 This will checkout and build all registered versions of the aslp-web interface.
 The site will be generated in ./out.
+Deployment is done by GitHub actions using this same script.
 
 Be aware that this will require some gigabytes of disk space as multiple
 versions of Nix's OCaml toolchain will be downloaded. 
