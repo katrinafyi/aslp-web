@@ -41,6 +41,7 @@ const parseIntSafe = (s, radix) => {
 
 
 const _write = (isError) => s => requestAnimationFrame(() => {
+  if (!s) return;
   const span = document.createElement('span');
   const data = new Uint8Array(s.length);
   for (let i = 0; i < s.length; i++) {
@@ -51,6 +52,7 @@ const _write = (isError) => s => requestAnimationFrame(() => {
   if (isError)
     span.classList.add('stderr');
   outputArea.appendChild(span);
+  // console.log('recv', s);
   return 0;
 });
 const write = { out: _write(false), err: _write(true), };
@@ -61,8 +63,7 @@ const stoneworker = Comlink.wrap(new Worker('worker-stone.js', { type: 'module' 
 await worker.boop(Comlink.proxy(console.log));
 
 await worker.init(
-  Comlink.proxy(write.out),
-  Comlink.proxy(write.err)
+  Comlink.proxy((iserr, s) => iserr ? write.err(s) : write.out(s))
 );
 
 console.log('ready');
@@ -267,11 +268,11 @@ const init = async () => {
   if (!resp.ok) throw new Error('fetch failure');
   const buf = await resp.arrayBuffer();
   await worker.unmarshal(Comlink.transfer(buf));
-  loadingText.classList.add('invisible');
 
   if (urlData.size > 0) {
     await submit();
   }
+  loadingText.classList.add('invisible');
 };
 
 

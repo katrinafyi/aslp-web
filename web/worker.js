@@ -2,7 +2,7 @@ importScripts('js.bc.js', 'cache.js', 'lib/pako.min.js', 'lib/comlink.js');
 
 const formatOCamlExceptions = f => (...args) => {
   try {
-    return f(...args);
+    f(...args);
   } catch (e) {
     if (e instanceof Array) {
       // convert ocaml representation of errors into
@@ -14,12 +14,37 @@ const formatOCamlExceptions = f => (...args) => {
   }
 };
 
+// const queue = [];
+// let processor = null;
+// const queueify = write => {
+//
+//   const process = async () => {
+//     while (queue.length > 0) {
+//       const [f, s] = queue.shift();
+//       // console.log(s);
+//       await f(s);
+//     }
+//     processor = null;
+//   };
+//
+//   return s => {
+//     queue.push([write, s]);
+//     if (processor == null) {
+//       processor = process();
+//     }
+//   };
+// };
+
 const methods = {
-  init: formatOCamlExceptions((out, err) => {
+  init: formatOCamlExceptions((writer) => {
+    // const outs = queueify(out);
+    // const errs = queueify(err);
+    // libASL_web.init(outs, errs);
+
     // XXX: do not eta reduce, functions must return nothing.
     libASL_web.init(
-      s => { out(s); },
-      s => { err(s); });
+      s => { writer(false, s); },
+      s => { writer(true, s); });
   }),
 
   boop: f => {
