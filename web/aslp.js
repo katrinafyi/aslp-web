@@ -207,7 +207,10 @@ const synchroniseInputs = async (writeback, el) => {
     try {
       mnemonic = !err ? await stoneworker.bytes2asm(Comlink.transfer(bytes, [bytes.buffer])) : '';
     } catch (exn) {
-      err = err || exn.toString();
+      let s = exn.toString();
+      if (s.includes('CS_ERR_OK'))
+        s = 'no recognised instruction';
+      err = err || s;
       // console.error('error in bytes2asm:', exn);
     }
     asmInput.value = mnemonic;
