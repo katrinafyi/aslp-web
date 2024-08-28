@@ -36,7 +36,8 @@ let () =
     (object%js
       (* TODO: support stdin from javascript for repl, possibly converting asli repl to lwt *)
       method init (out : string -> unit) (err : string -> unit) = init (fun () -> "") out err
-      method printException (exn : exn) = Printexc.to_string exn;
+      method formatException (exn : exn) = Printexc.to_string exn
+      method printException (exn : exn) = output_string stderr (Printexc.to_string exn)
 
       method marshal = Lib.marshal (env ())
       method unmarshal (x : Lib.js_uint8Array) = (cachedenv := Some (Lib.unmarshal x))
@@ -45,5 +46,7 @@ let () =
       method dis (x: string) = dis x
       method setDebugLevel i = (LibASL.Dis.debug_level := i)
       method setPrettyPrint (x : bool) = (print_pp := x)
+      method setFlags (flags: Js.js_string Js.t Js.js_array Js.t) =
+        Array.iter (fun x -> LibASL.Flags.set_flag @@ Js.to_string x) (Js.to_array flags)
      end) in
   ()

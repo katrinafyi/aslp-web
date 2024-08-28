@@ -7,6 +7,7 @@ const formatOCamlExceptions = f => (...args) => {
     if (e instanceof Array) {
       // convert ocaml representation of errors into
       // javascript representation.
+      // XXX: deferring via setTimeout avoids returning this to the caller.
       setTimeout(() => { throw e; }, 0);
     } else {
       throw e;
@@ -55,8 +56,11 @@ const methods = {
     unmarshal(arraybuf);
   }),
 
-  dis: formatOCamlExceptions(({ opcode, debug }) => {
+  dis: formatOCamlExceptions((args) => {
+    const { opcode, debug, flags } = args;
     libASL_web.setDebugLevel(debug);
+    libASL_web.setFlags(flags);
+    console.log('worker dis:', args);
     libASL_web.dis(opcode);
   }),
 

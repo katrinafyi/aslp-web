@@ -30,7 +30,11 @@
       margin-bottom: 0.5em;
     }
 
-    input[type="radio"], label, summary {
+    fieldset {
+      width: fit-content;
+    }
+
+    input[type="radio"], label[for], summary {
       cursor: pointer;
     }
 
@@ -70,15 +74,23 @@
       <!-- </p> -->
       <p>
         <details>
-          <summary>Debug options</summary>
-          <p>
-            <select name="debug" id="debug">
-              <option value="0">minimal</option>
-              <option value="1">stack trace</option>
-              <option value="2">stack trace, variables</option>
-              <option value="3">stack trace, variables, residual programs</option>
-            </select>
-          </p>
+          <summary>Additional options</summary>
+          <fieldset>
+            <p>
+              <label>Flags</label><br/>
+              <input type="checkbox" id="vectors" name="vectors" />
+              <label for="vectors">Use vectoriser</label><br/>
+            </p>
+            <p>
+            <label for="debug">Debug output</label><br/>
+              <select id="debug" name="debug" id="debug">
+                <option value="0">minimal</option>
+                <option value="1">stack trace</option>
+                <option value="2">stack trace, variables</option>
+                <option value="3">stack trace, variables, residual programs</option>
+              </select>
+            </p>
+          </fieldset>
         </details>
       </p>
 

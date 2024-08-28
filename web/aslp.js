@@ -22,6 +22,7 @@ const inputError = get('#inputerror');
 const goButton = get('#go');
 
 const debugInput = get('#debug');
+const vectorCheckbox = get('#vectors');
 const outputArea = get('#output');
 const loadingText = get('#loading');
 const downloadButton = get('#dl');
@@ -37,6 +38,25 @@ const parseIntSafe = (s, radix) => {
   if (radix === 16 && !s.match(/^[0-9a-fA-F]+$/)) throw new Error('invalid hexadecimal number');
   if (radix === 10 && !s.match(/^[0-9]+$/)) throw new Error('invalid decimal number');
   return x;
+};
+
+/** Wraps the given async function, enforcing mutual exclusion across calls to this function. */
+const mutex = asyncfn => {
+  let prev = Promise.resolve();
+
+  const go = prev => async (...args) => {
+    try { await prev; }
+    finally { return asyncfn(...args); }
+  };
+
+  const wrapped = (...args) => {
+    // successive calls to the wrapped function are forced
+    // to wait for the completion of the (directly) prior call.
+    prev = go(prev)(...args);
+    return prev;
+  };
+
+  return wrapped;
 };
 
 
@@ -115,7 +135,8 @@ export const shareLink = () => {
  * SEMANTICS BUTTON CLICK AND OUTPUT WRITING
  */
 
-export const submit = async () => {
+export const submit = mutex(async () => {
+  // console.log('a')
   clearOutput();
 
   try {
@@ -128,7 +149,13 @@ export const submit = async () => {
 
     copyArea.value = url.toString();
 
-    const arg = { opcode: previousOpcode, debug: parseInt(debugInput.value) };
+    const flag = bool => bool ? '+' : '-';
+
+    const arg = {
+      opcode: previousOpcode,
+      debug: parseInt(debugInput.value),
+      flags: [`${flag(vectorCheckbox.checked)}dis:vectors`], // TODO: generalise to more flags
+    };
     await worker.dis(arg);
 
   } catch (e) {
@@ -141,8 +168,9 @@ export const submit = async () => {
     dl.disabled = false;
     clearButton.disabled = false;
     shareButton.disabled = false;
+    // console.log('b')
   }
-};
+});
 
 
 /**
@@ -260,6 +288,7 @@ const init = async () => {
     if (urlData.get('bytes') != null) bytesInput.value = urlData.get('bytes');
     if (urlData.get('asm') != null) asmInput.value = urlData.get('asm');
     if (urlData.get('debug') != null) debugInput.value = urlData.get('debug');
+    if (urlData.get('vectors') != null) vectorCheckbox.checked = urlData.get('vectors') === 'on';
   } catch (exn) {
     console.error('exception during url loading:', exn);
   }
