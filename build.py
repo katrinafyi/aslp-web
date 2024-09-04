@@ -6,6 +6,7 @@ import os
 import sys
 import html
 import shutil
+import functools
 import subprocess
 import dataclasses
 
@@ -16,7 +17,7 @@ q = html.escape
 
 # date +"%Y-%m-%d %H:%M:%S%z"
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class Row:
   id: str
   flake: str
@@ -24,7 +25,8 @@ class Row:
   date: str
   desc: str
 
-diff_url = 'https://github.com/katrinafyi/pac-nix/compare/{0}...{1}'
+diff_url = 'https://github.com/katrinafyi/aslp-web/compare/{0}...{1}'
+pacnix_diff_url = 'https://github.com/katrinafyi/pac-nix/compare/{0}...{1}'
 
 def commit(v: Row) -> str | None:
   front, back = 'github:katrinafyi/pac-nix/', '#aslp_web'
@@ -32,16 +34,26 @@ def commit(v: Row) -> str | None:
     return v.flake.replace(front, '', 1).replace(back, '', 1)
   return None
 
+@functools.cache
+def src_rev(v: Row) -> str | None:
+  try:
+    return subprocess.check_output(['nix', 'eval', '--raw', v.flake + '.src.rev'], encoding='utf-8')
+  except Exception:
+    return None
+
 def rows(versions: list[Row]):
   for i, ver in enumerate(versions):
     (v,flake,path,t,desc) = ver.id, ver.flake, ver.path, ver.date, ver.desc
 
     i -= 1
-    diff = ''
+    diff = url = ''
+    c = p = None
+    prev = ver # XXX: for typing only
+
     # find previous pac-nix commit
-    while (c := commit(ver)) and i >= 0:
+    while (c := src_rev(ver)) and i >= 0:
       prev = versions[i]
-      if p := commit(prev):
+      if p := src_rev(prev):
         url = diff_url.format(p, c)
         diff = f'<small>(<a href="{q(url)}/" target="_blank" rel="noopener noreferrer">diff from {q(prev.id)}</a>)</small>'
         break
@@ -51,6 +63,8 @@ def rows(versions: list[Row]):
 <!--
   {q(flake)}
   {q(path)}
+  {q(url) if diff else '(no aslp-web diff)'}
+  {q(pacnix_diff_url.format(commit(prev), commit(ver))) if diff else '(no pac-nix diff)'}
 -->
 <a href="{q(v)}/">build {q(v)}</a>
 ({q(desc)})
@@ -85,7 +99,7 @@ def main():
   listing = list(rows(versions))
   
   latest = listing[-1]
-  other = b'\n\n'.join(b'<li>'+x+b'</li>' for x in reversed(listing))
+  other = b'\n\n'.join(b'<li>\n'+x+b'\n</li>' for x in reversed(listing))
 
   with open(OUT_PATH + '/index.html', 'rb') as f:
     html = f.read()
