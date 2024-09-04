@@ -37,5 +37,5 @@ Cypress.Commands.add('getByLabel', (label) => {
 
 Cypress.Commands.add('aslpweb', (query) => {
   cy.visit('http://localhost:10000/' + (query ?? ''));
-  return cy.contains('Loading').filter(':hidden');
+  return cy.contains('Loading').filter(':hidden', { timeout: 20000 });
 })

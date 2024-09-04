@@ -38,6 +38,10 @@ const methods = {
     } else {
       bytes = result.mc;
     }
+
+    if (asm.length > 0 && !err && bytes.length == 0) {
+      err = 'unspecified error';
+    }
     // console.log(ks.strerror(assembler.errno()));
 
     return {
