@@ -2,3 +2,4 @@
 2,github:katrinafyi/pac-nix/807df4aececfdf4c4010af42edbe1ce64785928f#aslp_web,lib/ocaml/4.14.1/site-lib/aslp_web/,2024-06-28 16:25:48+1000,evaluation environment caching
 3,github:katrinafyi/pac-nix/0828d849a8bc11df73c05233067f390c310bc484#aslp_web,lib/ocaml/5.1.1/site-lib/aslp_web/,2024-07-03 14:44:14+1000,ocaml 5
 4,github:katrinafyi/pac-nix/08a867d1d300eb6e17cf7c5ecbe75fe5d2542d9e#aslp_web,lib/ocaml/5.1.1/site-lib/aslp_web/,2024-07-06 21:57:54+1000,web worker
+5,github:katrinafyi/pac-nix/78ca72218c2f6b7acc7dd1ae7a35c1703938ce51#aslp_web,lib/ocaml/5.1.1/site-lib/aslp_web/,2024-09-04 17:09:59+1000,assembly input/output
