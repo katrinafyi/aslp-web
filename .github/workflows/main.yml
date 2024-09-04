@@ -33,6 +33,25 @@ jobs:
           name: aslp-web-build
           path: artifact
 
+  deploy:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    permissions:
+      deployments: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: aslp-web-build
+          path: result
+      - uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: ${{ secrets.CLOUDFLARE_PROJECT_NAME }}
+          directory: result
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          wranglerVersion: '3'
+
   test:
     needs: [ build ]
     strategy:
