@@ -2,9 +2,12 @@
 
 This provides a simple web interface for the ASLp partial evaluator.
 
-Screenshot:
+<details>
+  <summary>Screenshot</summary>
 
-![image](https://github.com/katrinafyi/aslp-web/assets/39479354/32f352bb-e178-4321-832b-29717f28c10e)
+  ![](https://github.com/user-attachments/assets/ac0cecea-90ea-4aab-8bf1-452f35f3b6fb)
+
+</details>
 
 ## build
 
