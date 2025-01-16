@@ -4,6 +4,7 @@ let init input out err =
   Js_of_ocaml.Sys_js.set_channel_filler stdin input;
   ()
 
+let () = Printexc.record_backtrace true 
 let cachedenv : Lib.marshal_env option ref = ref None
 let uncachedenv = lazy (failwith "unable to initialize disassembly environment")
 
@@ -19,10 +20,25 @@ let pp_stmt () =
   let open LibASL in
   if !print_pp then Asl_utils.pp_stmt else fun x -> Utils.to_string (Asl_parser_pp.pp_raw_stmt x)
 
+let hrule = "--------------------------------------------------------------------------------"
+
 let dis (x: string) =
   let (env, tenv) = env () in
+  print_endline "Online:\n" ;
   LibASL.Tcheck.env0 := tenv;
   let stmts = LibASL.Dis.retrieveDisassembly env (denv ()) x in
+  List.iter
+    (fun s -> print_endline @@ pp_stmt () s)
+    stmts;
+  flush stdout
+
+let dis_offline (x: string) =
+  print_endline "" ;
+  print_endline hrule ;
+  print_endline "Offline:\n";
+  let op = Z.of_string x in 
+  let bv = LibASL.Primops.prim_cvt_int_bits (Z.of_int 32) op in
+  let stmts = OfflineASL.Offline.run bv in
   List.iter
     (fun s -> print_endline @@ pp_stmt () s)
     stmts;
@@ -36,14 +52,15 @@ let () =
     (object%js
       (* TODO: support stdin from javascript for repl, possibly converting asli repl to lwt *)
       method init (out : string -> unit) (err : string -> unit) = init (fun () -> "") out err
-      method formatException (exn : exn) = Printexc.to_string exn
-      method printException (exn : exn) = output_string stderr (Printexc.to_string exn)
+      method formatException (exn : exn) = Printexc.to_string exn ^ " " ^  Printexc.get_backtrace ()
+      method printException (exn : exn) =  output_string stderr (Printexc.to_string exn) ; Printexc.print_backtrace stderr 
 
       method marshal = Lib.marshal (env ())
       method unmarshal (x : Lib.js_uint8Array) = (cachedenv := Some (Lib.unmarshal x))
       method reset = (cachedenv := None)
 
       method dis (x: string) = dis x
+      method offline (x: string) = dis_offline x
       method setDebugLevel i = (LibASL.Dis.debug_level := i)
       method setPrettyPrint (x : bool) = (print_pp := x)
       method setFlags (flags: Js.js_string Js.t Js.js_array Js.t) =

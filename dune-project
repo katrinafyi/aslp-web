@@ -19,7 +19,7 @@
  (name aslp_web)
  (synopsis "A short synopsis")
  (description "A longer description")
- (depends ocaml dune asli js_of_ocaml js_of_ocaml-ppx zarith_stubs_js)
+ (depends ocaml dune aslp_offline asli js_of_ocaml js_of_ocaml-ppx zarith_stubs_js)
  (tags
   (topics "to describe" your project)))
 

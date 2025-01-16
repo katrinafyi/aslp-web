@@ -64,6 +64,12 @@ const methods = {
     libASL_web.dis(opcode);
   }),
 
+  offline: formatOCamlExceptions((args) => {
+    console.log('offline worker dis:', args);
+    const { opcode, debug, flags } = args;
+    libASL_web.offline(opcode);
+  }),
+
 };
 
 Comlink.expose(methods);

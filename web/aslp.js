@@ -157,6 +157,7 @@ export const submit = mutex(async () => {
       flags: [`${flag(vectorCheckbox.checked)}dis:vectors`], // TODO: generalise to more flags
     };
     await worker.dis(arg);
+    await worker.offline(arg);
 
   } catch (e) {
     if (e instanceof Error) {

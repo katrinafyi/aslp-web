@@ -9,7 +9,7 @@ let marshal (env : marshal_env) : js_uint8Array =
   let len = Bytes.length bytes in
   let array = Bigarray.(Array1.init Int8_unsigned C_layout len (Bytes.get_uint8 bytes)) in
   let genarray = Bigarray.genarray_of_array1 array in
-  Js_of_ocaml.Typed_array.from_genarray genarray
+  Js_of_ocaml.Typed_array.from_genarray Js_of_ocaml.Typed_array.Int8_unsigned genarray
 
 let unmarshal (js : js_uint8Array) : marshal_env =
   let genarray = Js_of_ocaml.Typed_array.to_genarray js in

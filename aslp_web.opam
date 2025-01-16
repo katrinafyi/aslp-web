@@ -12,6 +12,7 @@ bug-reports: "https://github.com/username/reponame/issues"
 depends: [
   "ocaml"
   "dune" {>= "3.13"}
+  "aslp_offline"
   "asli"
   "js_of_ocaml"
   "js_of_ocaml-ppx"

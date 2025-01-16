@@ -2,6 +2,8 @@
  (name lib)
  (modules lib)
  (libraries
+  aslp_offline.aarch64
+  zarith_stubs_js
   (re_export asli.libASL-virtual)
   libASL_support_web
   (re_export js_of_ocaml)))
@@ -11,8 +13,7 @@
  (modes js)
  (modules js)
  (libraries lib)
- (js_of_ocaml
-  (flags --source-map-inline))
+ (flags (-w -32))
  (preprocess
   (pps js_of_ocaml-ppx)))
 
