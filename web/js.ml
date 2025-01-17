@@ -20,11 +20,8 @@ let pp_stmt () =
   let open LibASL in
   if !print_pp then Asl_utils.pp_stmt else fun x -> Utils.to_string (Asl_parser_pp.pp_raw_stmt x)
 
-let hrule = "--------------------------------------------------------------------------------"
-
 let dis (x: string) =
   let (env, tenv) = env () in
-  print_endline "Online:\n" ;
   LibASL.Tcheck.env0 := tenv;
   let stmts = LibASL.Dis.retrieveDisassembly env (denv ()) x in
   List.iter
@@ -33,9 +30,6 @@ let dis (x: string) =
   flush stdout
 
 let dis_offline (x: string) =
-  print_endline "" ;
-  print_endline hrule ;
-  print_endline "Offline:\n";
   let op = Z.of_string x in 
   let bv = LibASL.Primops.prim_cvt_int_bits (Z.of_int 32) op in
   let stmts = OfflineASL.Offline.run bv in

@@ -24,8 +24,10 @@ const goButton = get('#go');
 const debugInput = get('#debug');
 const vectorCheckbox = get('#vectors');
 const outputArea = get('#output');
+const offlineOutputArea = get('#offlineoutput');
 const loadingText = get('#loading');
 const downloadButton = get('#dl');
+const offlineDownloadButton = get('#dloff');
 const clearButton = get('#clear');
 const shareButton = get('#share');
 const copyArea = get('#copy');
@@ -60,14 +62,18 @@ const mutex = asyncfn => {
 };
 
 
-const _write = (isError) => s => requestAnimationFrame(() => {
+const _write = (isError, outputArea, isoffline) => s => requestAnimationFrame(() => {
   if (!s) return;
   const span = document.createElement('span');
   const data = new Uint8Array(s.length);
   for (let i = 0; i < s.length; i++) {
     data[i] = s.charCodeAt(i);
   }
-  outputData.push(data);
+  if (isoffline) {
+    outputDataOffline.push(data);
+  } else {
+    outputData.push(data);
+  }
   span.textContent = new TextDecoder('utf-8').decode(data);
   if (isError)
     span.classList.add('stderr');
@@ -75,16 +81,12 @@ const _write = (isError) => s => requestAnimationFrame(() => {
   // console.log('recv', s);
   return 0;
 });
-const write = { out: _write(false), err: _write(true), };
 
 const worker = Comlink.wrap(new Worker('worker.js'));
 const stoneworker = Comlink.wrap(new Worker('worker-stone.js', { type: 'module' }));
 
 await worker.boop(Comlink.proxy(console.log));
 
-await worker.init(
-  Comlink.proxy((iserr, s) => iserr ? write.err(s) : write.out(s))
-);
 
 console.log('ready');
 
@@ -94,32 +96,36 @@ console.log('ready');
  */
 
 const outputData = [];
+const outputDataOffline = [];
 let previousOpcode = null;
 let formData = null;
 
 export const clearOutput = () => {
   outputData.length = 0;
+  outputDataOffline.length = 0;
   previousOpcode = null;
   formData = null;
   outputArea.innerHTML = '';
+  offlineOutputArea.innerHTML = '';
   dl.disabled = true;
+  dloff.disabled = true;
   clearButton.disabled = true;
   shareButton.disabled = true;
   copyArea.value = '';
   goButton.disabled = false;
 };
 
-export const downloadOutput = () => {
-  const file = new Blob(outputData);
-
+export const downloadOutput = (offline) => {return () => {
+  const file = offline ? new Blob(outputDataOffline) : new Blob(outputData);
   const a = document.createElement("a");
   a.href = URL.createObjectURL(file);
-  a.setAttribute('download', `aslp_output_${previousOpcode}.txt`);
+  const fname = offline ? "offline" : "online";
+  a.setAttribute('download', `aslp_output_${previousOpcode}_${fname}.txt`);
   a.style.display = 'none';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-};
+}};
 
 export const shareLink = () => {
   if (copyArea.value.trim() != '') {
@@ -156,8 +162,15 @@ export const submit = mutex(async () => {
       debug: parseInt(debugInput.value),
       flags: [`${flag(vectorCheckbox.checked)}dis:vectors`], // TODO: generalise to more flags
     };
-    await worker.dis(arg);
+
+    await worker.init(
+      Comlink.proxy((iserr, s) => _write(iserr, offlineOutputArea, true)(s))
+    );
     await worker.offline(arg);
+    await worker.init(
+      Comlink.proxy((iserr, s) => _write(iserr, outputArea, false)(s))
+    );
+    await worker.dis(arg);
 
   } catch (e) {
     if (e instanceof Error) {
@@ -167,6 +180,7 @@ export const submit = mutex(async () => {
     }
   } finally {
     dl.disabled = false;
+    dloff.disabled = false;
     clearButton.disabled = false;
     shareButton.disabled = false;
     // console.log('b')
@@ -314,7 +328,8 @@ any([opcodeInput, bytesInput, asmInput]).on('change', _debouncedSynchroniseInput
 me(form).on('submit', ev => { halt(ev); submit(ev); });
 
 me(shareButton).on('click', shareLink);
-me(downloadButton).on('click', downloadOutput);
+me(downloadButton).on('click', downloadOutput(false));
+me(offlineDownloadButton).on('click', downloadOutput(true));
 me(clearButton).on('click', clearOutput);
 
 
