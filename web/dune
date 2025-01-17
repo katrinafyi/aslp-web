@@ -17,11 +17,27 @@
  (preprocess
   (pps js_of_ocaml-ppx)))
 
+
 (rule
  (targets jstemp.bc.js jstemp.bc.map)
  (deps js.bc.js ../sourcemap.py)
+ (enabled_if (= profile dev))
  (action
-  (run python3 ../sourcemap.py js.bc.js jstemp.bc.js js.bc.map)))
+  (run python3 ../sourcemap.py js.bc.js jstemp.bc.js js.bc.map)
+  )
+)
+
+(rule
+ (targets jstemp.bc.js jstemp.bc.map)
+ (deps js.bc.js)
+ (enabled_if (<> profile dev))
+ (action
+   (progn
+   (copy js.bc.js jstemp.bc.js)
+   (bash "touch jstemp.bc.map")
+  ))
+)
+
 
 (executable
  (name builder)
@@ -35,7 +51,8 @@
  (target aslp.heap)
  (deps builder.bc.js lib/pako.min.js cache.js)
  (action
-  (run node ./cache.js)))
+  (run node ./cache.js)
+  ))
 
 ; javascript executable to build aslp.heap
 
@@ -56,5 +73,4 @@
   worker-stone.js
   cache.js
   aslp.heap
-
   ) (section lib))
