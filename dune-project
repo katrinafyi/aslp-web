@@ -1,4 +1,4 @@
-(lang dune 3.17)
+(lang dune 3.15)
 
 (name aslp_web)
 
@@ -19,7 +19,15 @@
  (name aslp_web)
  (synopsis "A short synopsis")
  (description "A longer description")
- (depends ocaml dune aslp_offline asli js_of_ocaml js_of_ocaml-ppx zarith_stubs_js)
+ (depends
+   ocaml ; recommended >= 5.1 for tail-rec-mod-cons of List.map
+   dune
+   aslp_offline
+   asli
+   (js_of_ocaml (>= 5.9.0)) ; Js_of_ocaml.Typed_array.from_genarray api updated
+   js_of_ocaml-ppx
+   zarith_stubs_js
+  )
  (tags
   (topics "to describe" your project)))
 

@@ -11,10 +11,10 @@ doc: "https://url/to/documentation"
 bug-reports: "https://github.com/username/reponame/issues"
 depends: [
   "ocaml"
-  "dune" {>= "3.17"}
+  "dune" {>= "3.15"}
   "aslp_offline"
   "asli"
-  "js_of_ocaml"
+  "js_of_ocaml" {>= "5.9.0"}
   "js_of_ocaml-ppx"
   "zarith_stubs_js"
   "odoc" {with-doc}
