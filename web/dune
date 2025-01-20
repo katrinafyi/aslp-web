@@ -13,7 +13,8 @@
  (modes js)
  (modules js)
  (libraries lib)
- (flags (-w -32))
+ (js_of_ocaml
+  (flags --source-map-inline))
  (preprocess
   (pps js_of_ocaml-ppx)))
 
@@ -21,7 +22,7 @@
 (rule
  (targets jstemp.bc.js jstemp.bc.map)
  (deps js.bc.js ../sourcemap.py)
- (enabled_if (= profile dev))
+ (enabled_if (= %{profile} dev))
  (action
   (run python3 ../sourcemap.py js.bc.js jstemp.bc.js js.bc.map)
   )
@@ -30,7 +31,7 @@
 (rule
  (targets jstemp.bc.js jstemp.bc.map)
  (deps js.bc.js)
- (enabled_if (<> profile dev))
+ (enabled_if (<> %{profile} dev))
  (action
    (progn
    (copy js.bc.js jstemp.bc.js)
