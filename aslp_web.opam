@@ -11,8 +11,8 @@ doc: "https://url/to/documentation"
 bug-reports: "https://github.com/username/reponame/issues"
 depends: [
   "ocaml"
-  "dune" {>= "3.15"}
-  "aslp_offline"
+  "dune" {>= "3.14"}
+  "aslp_offline_jsoo"
   "asli"
   "js_of_ocaml" {>= "5.9.0"}
   "js_of_ocaml-ppx"

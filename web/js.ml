@@ -4,7 +4,7 @@ let init input out err =
   Js_of_ocaml.Sys_js.set_channel_filler stdin input;
   ()
 
-let () = Printexc.record_backtrace true 
+let () = Printexc.record_backtrace true
 let cachedenv : Lib.marshal_env option ref = ref None
 let uncachedenv = lazy (failwith "unable to initialize disassembly environment")
 
@@ -29,15 +29,6 @@ let dis (x: string) =
     stmts;
   flush stdout
 
-let dis_offline (x: string) =
-  let op = Z.of_string x in 
-  let bv = LibASL.Primops.prim_cvt_int_bits (Z.of_int 32) op in
-  let stmts = OfflineASL.Offline.run bv in
-  List.iter
-    (fun s -> print_endline @@ pp_stmt () s)
-    stmts;
-  flush stdout
-
 let () =
   print_endline "libASL_web ocaml-side...";
 
@@ -47,14 +38,13 @@ let () =
       (* TODO: support stdin from javascript for repl, possibly converting asli repl to lwt *)
       method init (out : string -> unit) (err : string -> unit) = init (fun () -> "") out err
       method formatException (exn : exn) = Printexc.to_string exn ^ " " ^  Printexc.get_backtrace ()
-      method printException (exn : exn) =  output_string stderr (Printexc.to_string exn) ; Printexc.print_backtrace stderr 
+      method printException (exn : exn) =  output_string stderr (Printexc.to_string exn) ; Printexc.print_backtrace stderr
 
       method marshal = Lib.marshal (env ())
       method unmarshal (x : Lib.js_uint8Array) = (cachedenv := Some (Lib.unmarshal x))
       method reset = (cachedenv := None)
 
       method dis (x: string) = dis x
-      method offline (x: string) = dis_offline x
       method setDebugLevel i = (LibASL.Dis.debug_level := i)
       method setPrettyPrint (x : bool) = (print_pp := x)
       method setFlags (flags: Js.js_string Js.t Js.js_array Js.t) =

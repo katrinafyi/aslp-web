@@ -24,7 +24,11 @@ def main():
 
   sourcemappingurl = b'\n//# sourceMappingURL='
   marker = sourcemappingurl + b'data:application/json;base64,'
-  assert marker in orig
+
+  if marker not in orig:
+    print(sys.argv[0] + f': warning: unable to find marker {marker!r} in {sys.argv[1]}', file=sys.stderr)
+    return
+
   js, sourcemap = orig.split(marker, 1)
 
   with open(sys.argv[2], 'wb') as f:

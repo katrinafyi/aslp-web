@@ -164,17 +164,17 @@ export const submit = mutex(async () => {
     };
 
     await worker.init(
-      Comlink.proxy((iserr, s) => _write(iserr, offlineOutputArea, true)(s))
-    );
-    await worker.offline(arg);
-    await worker.init(
       Comlink.proxy((iserr, s) => _write(iserr, outputArea, false)(s))
     );
     await worker.dis(arg);
+    await worker.init(
+      Comlink.proxy((iserr, s) => _write(iserr, offlineOutputArea, true)(s))
+    );
+    await worker.offline(arg);
 
   } catch (e) {
     if (e instanceof Error) {
-      write.err(e.toString());
+      _write(true, outputArea, false)(e.toString());
     } else {
       throw e;
     }
