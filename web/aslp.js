@@ -84,15 +84,12 @@ console.log('ready');
  * OUTPUT INTERACTION (CLEAR, DOWNLOAD, SHARE)
  */
 
-const outputDataOffline = [];
 let previousOpcode = null;
 let formData = null;
 
 export const clearOutput = () => {
-  outputDataOffline.length = 0;
   previousOpcode = null;
   formData = null;
-
 
   clearButton.disabled = true;
   shareButton.disabled = true;
@@ -118,7 +115,7 @@ export const shareLink = () => {
 
 export const submit = mutex(async () => {
   // console.log('a')
-  onlineOutput.clear();
+  clearOutput();
 
   previousOpcode = opcodeInput.value.trim();
   formData = new FormData(form);

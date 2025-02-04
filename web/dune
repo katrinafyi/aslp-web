@@ -61,10 +61,15 @@
 
 ; static files for distribution
 
+(rule
+ (copy %{lib:aslp_offline_jsoo:offline_js.bc.js} offline_js.bc.js))
+
 (install
  (files
   (jstemp.bc.js as js.bc.js)
   (jstemp.bc.map as js.bc.map)
+  offline_js.bc.js
+
   index.html
   reset.css
   aslp.js

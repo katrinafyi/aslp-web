@@ -1,4 +1,4 @@
-importScripts('offline.bc.js', 'lib/comlink.js');
+importScripts('offline_js.bc.js', 'lib/comlink.js');
 
 const formatOCamlExceptions = f => (...args) => {
   try {
@@ -8,21 +8,28 @@ const formatOCamlExceptions = f => (...args) => {
       // convert ocaml representation of errors into
       // javascript representation.
       // XXX: deferring via setTimeout avoids returning this to the caller.
+      // this allows the ocaml exception to be processed by our global
+      // exception handler, from ocaml.
       setTimeout(() => { throw e; }, 0);
+
+      // XXX: horrific hack to pull out the jsoo-specific exception
+      // and print it after the ocaml exception. this is a normal js exception.
+      if (e.js_error) {
+        setTimeout(() => { w(true, e.js_error.stack); }, 10);
+      }
     } else {
       throw e;
     }
   }
 };
 
+let w;
 const methods = {
   init: formatOCamlExceptions((writer) => {
-    // const outs = queueify(out);
-    // const errs = queueify(err);
-    // libASL_web.init(outs, errs);
-
+    console.log('offline worker init');
     // XXX: do not eta reduce, functions must return nothing.
-    libASL_web.init(
+    w = writer;
+    aslp_offline.init(
       s => { writer(false, s); },
       s => { writer(true, s); });
   }),
