@@ -12,10 +12,11 @@ const formatOCamlExceptions = f => (...args) => {
       // exception handler, from ocaml.
       setTimeout(() => { throw e; }, 0);
 
-      // XXX: horrific hack to pull out the jsoo-specific exception
-      // and print it after the ocaml exception. this is a normal js exception.
+      // XXX: pull out the jsoo-specific exception and print it after
+      // the ocaml exception. this is a normal js exception.
       if (e.js_error) {
-        setTimeout(() => { w(true, e.js_error.stack); }, 10);
+        console.error(e.js_error);
+        throw e.js_error;
       }
     } else {
       throw e;

@@ -52,7 +52,7 @@ export function makeAslpOutput(label, container, previousOpcode)  {
       return await f();
     } catch (e) {
       if (e instanceof Error) {
-        write(true)(e.toString());
+        write(true)(e.toString() + '\n');
       } else {
         throw e;
       }
