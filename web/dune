@@ -68,7 +68,9 @@
   index.html
   reset.css
   aslp.js
+  aslp_output.js
   worker.js
+  worker-offline.js
   worker-stone.js
   cache.js
   aslp.heap
