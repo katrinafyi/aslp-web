@@ -56,15 +56,17 @@
 ; javascript executable to build aslp.heap
 
 (install
+ (package aslp_web)
  (files builder.bc.js cache.js)
  (section bin))
 
 ; static files for distribution
 
-(rule (copy %{lib:aslp_offline_jsoo:offline_js.bc.js} offline_js.bc.js))
-(rule (copy %{lib:aslp_offline_jsoo:offline_js.bc.map} offline_js.bc.map))
+(rule (copy %{lib:aslp_offline_js:offline_js.bc.js} offline_js.bc.js))
+(rule (copy %{lib:aslp_offline_js:offline_js.bc.map} offline_js.bc.map))
 
 (install
+ (package aslp_web)
  (files
   (jstemp.bc.js as js.bc.js)
   (jstemp.bc.map as js.bc.map)
