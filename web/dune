@@ -2,6 +2,7 @@
  (name lib)
  (modules lib)
  (libraries
+  zarith_stubs_js
   (re_export asli.libASL-virtual)
   libASL_support_web
   (re_export js_of_ocaml)))
@@ -12,15 +13,10 @@
  (modules js)
  (libraries lib)
  (js_of_ocaml
-  (flags --source-map-inline))
+  (sourcemap file))
  (preprocess
   (pps js_of_ocaml-ppx)))
 
-(rule
- (targets jstemp.bc.js jstemp.bc.map)
- (deps js.bc.js ../sourcemap.py)
- (action
-  (run python3 ../sourcemap.py js.bc.js jstemp.bc.js js.bc.map)))
 
 (executable
  (name builder)
@@ -34,26 +30,36 @@
  (target aslp.heap)
  (deps builder.bc.js lib/pako.min.js cache.js)
  (action
-  (run node ./cache.js)))
+  (run node ./cache.js)
+  ))
 
 ; javascript executable to build aslp.heap
 
 (install
+ (package aslp_web)
  (files builder.bc.js cache.js)
  (section bin))
 
 ; static files for distribution
 
+(rule (copy %{lib:aslp_offline_js:offline_js.bc.js} offline_js.bc.js))
+(rule (copy %{lib:aslp_offline_js:offline_js.bc.map} offline_js.bc.map))
+
 (install
+ (package aslp_web)
  (files
-  (jstemp.bc.js as js.bc.js)
-  (jstemp.bc.map as js.bc.map)
+  js.bc.js
+  js.bc.map
+  offline_js.bc.js
+  offline_js.bc.map
+
   index.html
   reset.css
   aslp.js
+  aslp_output.js
   worker.js
+  worker-offline.js
   worker-stone.js
   cache.js
   aslp.heap
-
   ) (section lib))

@@ -63,7 +63,6 @@ const methods = {
     console.log('worker dis:', args);
     libASL_web.dis(opcode);
   }),
-
 };
 
 Comlink.expose(methods);

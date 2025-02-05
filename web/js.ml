@@ -4,6 +4,7 @@ let init input out err =
   Js_of_ocaml.Sys_js.set_channel_filler stdin input;
   ()
 
+let () = Printexc.record_backtrace true
 let cachedenv : Lib.marshal_env option ref = ref None
 let uncachedenv = lazy (failwith "unable to initialize disassembly environment")
 
@@ -36,8 +37,8 @@ let () =
     (object%js
       (* TODO: support stdin from javascript for repl, possibly converting asli repl to lwt *)
       method init (out : string -> unit) (err : string -> unit) = init (fun () -> "") out err
-      method formatException (exn : exn) = Printexc.to_string exn
-      method printException (exn : exn) = output_string stderr (Printexc.to_string exn)
+      method formatException (exn : exn) = Printexc.to_string exn ^ " " ^  Printexc.get_backtrace ()
+      method printException (exn : exn) =  output_string stderr (Printexc.to_string exn) ; Printexc.print_backtrace stderr
 
       method marshal = Lib.marshal (env ())
       method unmarshal (x : Lib.js_uint8Array) = (cachedenv := Some (Lib.unmarshal x))

@@ -11,7 +11,7 @@ This provides a simple web interface for the ASLp partial evaluator.
 
 ## build
 
-To build the interface, you will need: the Dune build system, the ASLp OCaml package, and NodeJS. 
+To build the interface, you will need: the Dune build system, the ASLp OCaml package, and NodeJS.
 ```
 opam install --deps-only ./*.opam
 ```
@@ -55,7 +55,20 @@ without blocking the main UI thread.
 Currently, there are web workers for the ASLp functionality and the
 Capstone/Keystone functionality.
 
+## testing
+
 Basic end-to-end tests are written using the Cypress framework and
 run by GitHub actions on push.
+
+To run these locally, you will need npm.
+```bash
+npm install
+npm run test
+```
+
+To open the visual Cypress editor,
+```bash
+npx cypress open
+```
 
 

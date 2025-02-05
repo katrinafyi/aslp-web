@@ -3,6 +3,7 @@
  */
 
 import * as Comlink from "./lib/comlink.mjs";
+import { makeAslpOutput } from "./aslp_output.js";
 
 /** Queries for a single matching element, asserting that at least one exists. */
 const get = query => {
@@ -14,21 +15,25 @@ const get = query => {
 
 const form = get('#form');
 
+// inputs
 const opcodeInput = get('#opcode');
 const bytesInput = get('#bytes');
 const asmInput = get('#asm');
 const inputError = get('#inputerror');
 
-const goButton = get('#go');
-
-const debugInput = get('#debug');
+// additional options
 const vectorCheckbox = get('#vectors');
-const outputArea = get('#output');
+const debugInput = get('#debug');
+
+// main buttons
+const goButton = get('#go');
 const loadingText = get('#loading');
-const downloadButton = get('#dl');
+
+// share buttons
 const clearButton = get('#clear');
 const shareButton = get('#share');
 const copyArea = get('#copy');
+const copiedText = get('#copied');
 
 
 /** Parses an integer while detecting suprious characters. */
@@ -60,31 +65,18 @@ const mutex = asyncfn => {
 };
 
 
-const _write = (isError) => s => requestAnimationFrame(() => {
-  if (!s) return;
-  const span = document.createElement('span');
-  const data = new Uint8Array(s.length);
-  for (let i = 0; i < s.length; i++) {
-    data[i] = s.charCodeAt(i);
-  }
-  outputData.push(data);
-  span.textContent = new TextDecoder('utf-8').decode(data);
-  if (isError)
-    span.classList.add('stderr');
-  outputArea.appendChild(span);
-  // console.log('recv', s);
-  return 0;
-});
-const write = { out: _write(false), err: _write(true), };
+const onlineOutput = makeAslpOutput('online', get('.online'), () => previousOpcode);
+const offlineOutput = makeAslpOutput('offline', get('.offline'), () => previousOpcode);
 
 const worker = Comlink.wrap(new Worker('worker.js'));
+await worker.init(Comlink.proxy((iserr, s) => onlineOutput.write(iserr)(s)));
+const offline = Comlink.wrap(new Worker('worker-offline.js'));
+await offline.init(Comlink.proxy((iserr, s) => offlineOutput.write(iserr)(s)));
+
 const stoneworker = Comlink.wrap(new Worker('worker-stone.js', { type: 'module' }));
 
 await worker.boop(Comlink.proxy(console.log));
 
-await worker.init(
-  Comlink.proxy((iserr, s) => iserr ? write.err(s) : write.out(s))
-);
 
 console.log('ready');
 
@@ -93,32 +85,20 @@ console.log('ready');
  * OUTPUT INTERACTION (CLEAR, DOWNLOAD, SHARE)
  */
 
-const outputData = [];
 let previousOpcode = null;
 let formData = null;
 
 export const clearOutput = () => {
-  outputData.length = 0;
   previousOpcode = null;
   formData = null;
-  outputArea.innerHTML = '';
-  dl.disabled = true;
+
   clearButton.disabled = true;
   shareButton.disabled = true;
   copyArea.value = '';
-  goButton.disabled = false;
-};
+  copiedText.classList.add('invisible');
 
-export const downloadOutput = () => {
-  const file = new Blob(outputData);
-
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(file);
-  a.setAttribute('download', `aslp_output_${previousOpcode}.txt`);
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  onlineOutput.clear();
+  offlineOutput.clear();
 };
 
 export const shareLink = () => {
@@ -128,6 +108,7 @@ export const shareLink = () => {
     copyArea.focus();
     copyArea.select();
     document.execCommand('copy');
+    copiedText.classList.remove('invisible');
   }
 };
 
@@ -139,33 +120,30 @@ export const submit = mutex(async () => {
   // console.log('a')
   clearOutput();
 
+  previousOpcode = opcodeInput.value.trim();
+  formData = new FormData(form);
+
+  const params = new URLSearchParams(formData).toString();
+  const url = new URL(window.location.href);
+  url.search = '?' + params;
+
+  copyArea.value = url.toString();
+
+  const flag = bool => bool ? '+' : '-';
+
+  const arg = {
+    opcode: previousOpcode,
+    debug: parseInt(debugInput.value),
+    flags: [`${flag(vectorCheckbox.checked)}dis:vectors`], // TODO: generalise to more flags
+  };
+
   try {
-    previousOpcode = opcodeInput.value.trim();
-    formData = new FormData(form);
-
-    const params = new URLSearchParams(formData).toString();
-    const url = new URL(window.location.href);
-    url.search = '?' + params;
-
-    copyArea.value = url.toString();
-
-    const flag = bool => bool ? '+' : '-';
-
-    const arg = {
-      opcode: previousOpcode,
-      debug: parseInt(debugInput.value),
-      flags: [`${flag(vectorCheckbox.checked)}dis:vectors`], // TODO: generalise to more flags
-    };
-    await worker.dis(arg);
-
-  } catch (e) {
-    if (e instanceof Error) {
-      write.err(e.toString());
-    } else {
-      throw e;
-    }
+    onlineOutput.catch_errors(() => worker.dis(arg));
+    offlineOutput.catch_errors(() => offline.dis(arg));
   } finally {
-    dl.disabled = false;
+    onlineOutput.enable_download(true);
+    offlineOutput.enable_download(true);
+
     clearButton.disabled = false;
     shareButton.disabled = false;
     // console.log('b')
@@ -280,7 +258,6 @@ const init = async () => {
   // window.setOpcodeMode = setOpcodeMode
   window.clearOutput = clearOutput
   window.shareLink = shareLink
-  window.downloadOutput = downloadOutput
 
   const urlData = new URLSearchParams(window.location.search);
   try {
@@ -313,7 +290,6 @@ any([opcodeInput, bytesInput, asmInput]).on('change', _debouncedSynchroniseInput
 me(form).on('submit', ev => { halt(ev); submit(ev); });
 
 me(shareButton).on('click', shareLink);
-me(downloadButton).on('click', downloadOutput);
 me(clearButton).on('click', clearOutput);
 
 
