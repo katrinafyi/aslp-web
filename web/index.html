@@ -30,6 +30,11 @@
       margin-bottom: 0.5em;
     }
 
+    hr {
+      margin-bottom: 0.5em;
+      margin-top: 0.5em;
+    }
+
     fieldset {
       width: fit-content;
     }
@@ -44,6 +49,18 @@
 
     .stderr {
       color: #ce0000;
+    }
+
+    .outputs {
+      margin-top: 1em;
+    }
+
+    .anchor {
+      color: grey;
+    }
+
+    .output {
+      min-height: 8em;
     }
   </style>
 
@@ -105,25 +122,36 @@
         <button disabled type=button class="small" id="clear">Clear</button>
         <button disabled type=button class="small" id="share">Share</button>
         <input class="small" id="copy" type="text" readonly>
+        <span id="copied" class="small invisible">Copied!</span>
       </p>
 
       <div class="outputs">
         <div class="online">
-          <a id="online" href="#online"><h4>Online lifter output</h4></a>
+          <h3 id="online">Online partial evaluation <a href="#online" class=anchor>#</a></h3>
+          <p class=small>
+            Online partial evaluation runs the simplification of the ARM specifications
+            every time the semantics are requested.
+            This is described in the <a href="https://doi.org/10.34727/2023/isbn.978-3-85448-060-0_36"><i>Lift-off</i></a> paper.
+          </p>
           <p>
             <button disabled type=button class="small dl">Download</button>
           </p>
           <p>
-            <pre class="output" style="min-height: 10em"></pre>
+            <pre class="output"></pre>
           </p>
         </div>
         <div class="offline">
-          <a id="offline" href="#offline"><h4>Offline lifter output</h4></a>
+          <h3 id="offline">Offline partial evaluation <a href="#offline" class=anchor>#</a></h3>
+          <p class=small>
+            Offline partial evaluation performs the simplification once, ahead-of-time, and then translated to Javascript.
+            When requesting semantics, the offline lifter is simply evaluated as-is.
+            This is described in the <a href="https://doi.org/10.1007/978-3-031-74776-2_4"><i>Lift-offline</i></a> paper.
+          </p>
           <p>
             <button disabled type=button class="small dl">Download</button>
           </p>
           <p>
-            <pre class="output" style="min-height: 10em"></pre>
+            <pre class="output"></pre>
           </p>
         </div>
       </div>

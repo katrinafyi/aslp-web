@@ -33,6 +33,7 @@ const loadingText = get('#loading');
 const clearButton = get('#clear');
 const shareButton = get('#share');
 const copyArea = get('#copy');
+const copiedText = get('#copied');
 
 
 /** Parses an integer while detecting suprious characters. */
@@ -94,6 +95,7 @@ export const clearOutput = () => {
   clearButton.disabled = true;
   shareButton.disabled = true;
   copyArea.value = '';
+  copiedText.classList.add('invisible');
 
   onlineOutput.clear();
   offlineOutput.clear();
@@ -106,6 +108,7 @@ export const shareLink = () => {
     copyArea.focus();
     copyArea.select();
     document.execCommand('copy');
+    copiedText.classList.remove('invisible');
   }
 };
 
