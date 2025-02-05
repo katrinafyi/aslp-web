@@ -12,30 +12,10 @@
  (modes js)
  (modules js)
  (libraries lib)
- (js_of_ocaml)
+ (js_of_ocaml
+  (sourcemap file))
  (preprocess
   (pps js_of_ocaml-ppx)))
-
-
-(rule
- (targets jstemp.bc.js jstemp.bc.map)
- (deps js.bc.js ../sourcemap.py)
- (enabled_if (= %{profile} dev))
- (action
-  (run python3 ../sourcemap.py js.bc.js jstemp.bc.js js.bc.map)
-  )
-)
-
-(rule
- (targets jstemp.bc.js jstemp.bc.map)
- (deps js.bc.js)
- (enabled_if (<> %{profile} dev))
- (action
-   (progn
-   (copy js.bc.js jstemp.bc.js)
-   (bash "touch jstemp.bc.map")
-  ))
-)
 
 
 (executable
@@ -68,8 +48,8 @@
 (install
  (package aslp_web)
  (files
-  (jstemp.bc.js as js.bc.js)
-  (jstemp.bc.map as js.bc.map)
+  js.bc.js
+  js.bc.map
   offline_js.bc.js
   offline_js.bc.map
 
