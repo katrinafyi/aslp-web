@@ -1,5 +1,5 @@
 {
-  inputs.pac-nix.url = "github:katrinafyi/pac-nix";
+  inputs.pac-nix.url = "github:katrinafyi/pac-nix/nixpkgs-update-for-dune-3-17";
 
   nixConfig.extra-substituters = [ "https://pac-nix.cachix.org/" ];
   nixConfig.extra-trusted-public-keys = [ "pac-nix.cachix.org-1:l29Pc2zYR5yZyfSzk1v17uEZkhEw0gI4cXuOIsxIGpc=" ];

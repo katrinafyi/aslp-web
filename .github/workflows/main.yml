@@ -44,6 +44,8 @@ jobs:
         with:
           name: aslp-web-build
           path: result
+      - run: ls -lhR result
+      - run: rm -rfv result/*.map
       - uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
