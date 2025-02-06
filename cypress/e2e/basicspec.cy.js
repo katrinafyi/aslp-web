@@ -40,30 +40,54 @@ describe('aslp-web tests', () => {
     cy.aslpweb();
     cy.getByLabel('big-endian').type('{selectall}0xaa030041');
     cy.get('button[type=submit]').click();
-    cy.get('#output')
+    cy.get('.online .output')
       .should('contain', 'aarch64_integer_logical_shiftedreg')
       .and('contain', 'or_bits');
+    cy.get('.offline .output')
+      .should('contain', 'or_bits');
 
     cy.getByLabel('assembly').type('{selectall}' + 'add v0.4h, v0.4h, v0.4h');
     cy.get('button[type=submit]').click();
-    cy.get('#output')
+    cy.get('.online .output')
       .should('contain', 'aarch64_vector_arithmetic_binary_uniform_add_wrapping_single_simd')
       .and('not.contain', 'add_vec')
       .and('contain', 'add_bits');
+    cy.get('.offline .output')
+      .should('contain', 'add_bits');
 
     cy.getByLabel('vector').check({ force: true });
     cy.get('button[type=submit]').click();
-    cy.get('#output')
+    cy.get('.online .output')
       .should('contain', 'aarch64_vector_arithmetic_binary_uniform_add_wrapping_single_simd')
       .and('contain', 'add_vec');
+    cy.get('.offline .output')
+      .should('contain', 'add_bits')
+      .and('not.contain', 'add_vec');
   });
 
   it('parses options from url', () => {
     cy.aslpweb('?opcode=0xaa030041&bytes=41+00+03+AA&asm=orr+x1%2C+x2%2C+x3&debug=1');
-    cy.get('#output')
+    cy.get('.online .output')
       .should('contain', 'aarch64_integer_logical_shiftedreg')
       .and('contain', 'or_bits')
       .and('contain', 'dis_decode_case');
   });
+
+  it('reports errors', () => {
+    cy.aslpweb();
+    cy.getByLabel('big-endian').type('{selectall}0x012341');
+    cy.get('button[type=submit]').click();
+
+    Cypress.on('uncaught:exception', () => {
+      return false
+    });
+
+    cy.get('.online .output')
+      .should('contain', 'LibASL.Value.Throw');
+
+    cy.get('.offline .output')
+      .should('contain', 'Failure')
+      .should('contain', 'exception containing backtrace');
+  })
 
 })
