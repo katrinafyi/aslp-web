@@ -86,10 +86,12 @@ def main():
 
   print(*versions, sep='\n')
   for v in versions:
+    print()
     print('building', v)
     result = 'result_' + v.id
 
-    subprocess.check_call(['nix', 'build', '-L', '--out-link', result, v.flake])
+    if 0 != subprocess.call(['./nix-download-bare.sh', v.flake, result]):
+      subprocess.check_call(['nix', 'build', '-L', '--out-link', result, v.flake])
 
     shutil.copytree(result + '/' + v.path + '/.', OUT_PATH + '/' + v.id, copy_function=shutil.copy)
 
@@ -97,7 +99,7 @@ def main():
   shutil.copy('./reset.css', OUT_PATH)
 
   listing = list(rows(versions))
-  
+
   latest = listing[-1]
   other = b'\n\n'.join(b'<li>\n'+x+b'\n</li>' for x in reversed(listing))
 
