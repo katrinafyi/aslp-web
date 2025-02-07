@@ -48,6 +48,7 @@ jobs:
       - run: rm -rfv result/*.map
       - uses: cloudflare/pages-action@v1
         with:
+          branch: ${{ github.head_ref || github.ref_name }}
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: ${{ vars.CLOUDFLARE_PROJECT_NAME }}
