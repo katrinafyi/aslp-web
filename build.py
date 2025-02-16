@@ -95,6 +95,9 @@ def main():
 
     shutil.copytree(result + '/' + v.path + '/.', OUT_PATH + '/' + v.id, copy_function=shutil.copy)
 
+    if os.path.exists(result + '/404.html'):
+      shutil.copy(result + '/404.html', OUT_PATH)
+
   shutil.copy('./index.html', OUT_PATH)
   shutil.copy('./reset.css', OUT_PATH)
 
