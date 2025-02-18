@@ -25,7 +25,7 @@ class Row:
   date: str
   desc: str
 
-diff_url = 'https://github.com/katrinafyi/aslp-web/compare/{0}...{1}'
+diff_url = 'https://github.com/{0}/compare/{1}...{2}'
 pacnix_diff_url = 'https://github.com/katrinafyi/pac-nix/compare/{0}...{1}'
 
 def commit(v: Row) -> str | None:
@@ -35,11 +35,15 @@ def commit(v: Row) -> str | None:
   return None
 
 @functools.cache
-def src_rev(v: Row) -> str | None:
-  try:
-    return subprocess.check_output(['nix', 'eval', '--raw', v.flake + '.src.rev'], encoding='utf-8')
-  except Exception:
-    return None
+def src_rev(v: Row, pkgs: tuple[str]) -> tuple[str, ...] | None:
+  baseflake, _ = v.flake.rsplit('#', 1)
+  out = []
+  for p in pkgs:
+    try:
+      out.append(subprocess.check_output(['nix', 'eval', '--raw', baseflake + '#' + p + '.src.rev'], encoding='utf-8'))
+    except Exception:
+      return None
+  return tuple(out)
 
 def rows(versions: list[Row]):
   for i, ver in enumerate(versions):
@@ -50,12 +54,17 @@ def rows(versions: list[Row]):
     c = p = None
     prev = ver # XXX: for typing only
 
+    diff_pkgs = ('aslp', 'aslp_web')
+    diff_githubs = ('UQ-PAC/aslp', 'katrinafyi/aslp-web')
     # find previous pac-nix commit
-    while (c := src_rev(ver)) and i >= 0:
+    while (curs := src_rev(ver, diff_pkgs)) and i >= 0:
       prev = versions[i]
-      if p := src_rev(prev):
-        url = diff_url.format(p, c)
-        diff = f'<small>(<a href="{q(url)}/" target="_blank" rel="noopener noreferrer">diff from {q(prev.id)}</a>)</small>'
+      if prevs := src_rev(prev, diff_pkgs):
+        diffs = []
+        for pkgname, pkg, p, c in zip(diff_pkgs, diff_githubs, prevs, curs):
+          url = diff_url.format(pkg, p, c)
+          diffs.append(f'<a href="{q(url)}/" target="_blank" rel="noopener noreferrer">diff of {q(pkgname)} from {q(prev.id)}</a>')
+        diff = '<small>(' + ', '.join(diffs) + ')</small>'
         break
       i -= 1
 
@@ -93,10 +102,11 @@ def main():
     if 0 != subprocess.call(['./nix-download-bare.sh', v.flake, result]):
       subprocess.check_call(['nix', 'build', '-L', '--out-link', result, v.flake])
 
-    shutil.copytree(result + '/' + v.path + '/.', OUT_PATH + '/' + v.id, copy_function=shutil.copy)
+    subpath = result + '/' + v.path + '/.'
+    shutil.copytree(subpath, OUT_PATH + '/' + v.id, copy_function=shutil.copy)
 
-    if os.path.exists(result + '/404.html'):
-      shutil.copy(result + '/404.html', OUT_PATH)
+    if os.path.exists(subpath + '/404.html'):
+      shutil.copy(subpath + '/404.html', OUT_PATH)
 
   shutil.copy('./index.html', OUT_PATH)
   shutil.copy('./reset.css', OUT_PATH)
