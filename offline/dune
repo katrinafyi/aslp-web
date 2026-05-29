@@ -6,7 +6,7 @@
   (compilation_mode whole_program)
   (sourcemap file))
  (modules offline_js)
- (libraries asli.libASL-stage0 aslp_offline.aarch64 zarith_stubs_js)
+ (libraries asli.libASL-stage0 aslp_lifter_ocaml.offlineASL_runner zarith_stubs_js)
  (preprocess (pps js_of_ocaml-ppx))
 )
 

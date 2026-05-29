@@ -36,7 +36,7 @@
  (depends
    ocaml ; recommended >= 5.1 for tail-rec-mod-cons of List.map
    dune
-   asli
+   aslp_lifter_ocaml
    (js_of_ocaml (>= 5.9.0)) ; Js_of_ocaml.Typed_array.from_genarray api updated
    js_of_ocaml-ppx
    zarith_stubs_js

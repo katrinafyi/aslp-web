@@ -11,7 +11,7 @@ let init input out err =
 let dis (opcode: string) : unit =
   let op = Z.of_string opcode in
   let bv = Primops.prim_cvt_int_bits (Z.of_int 32) op in
-  let stmts = OfflineASL.Offline.run bv in
+  let stmts = OfflineASL_runner.run bv in
   List.iter (fun x -> print_endline (pp_stmt x)) stmts;
   flush stdout
 
