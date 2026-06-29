@@ -77,5 +77,15 @@ echo 'prfm plil3keep, [x0]' | llvm-mc -arch=arm64 -mattr=v9.5a --show-encoding
     <pre>
 echo '0x0C 0x00 0x80 0xF9' | llvm-mc -arch=arm64 -mattr=v9.5a --disassemble
     </pre>
+
+    <p>
+    If needed, you can also add additional feature flags in <code>-mattr=</code>, separated by commas. For example:
+    </p>
+    <pre>
+echo '0x89 0x50 0xbf 0x04' | llvm-mc -arch=arm64 -mattr=v9.5a,sve2  --disassemble
+    </pre>
+    <p>
+    To see the list of supported features for an architecture, pass <code>help</code> inside <code>-mattr=</code>.
+    </p>
   </body>
 </html>
